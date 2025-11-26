@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SPA Sistem Penilaian Akademik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
+        <div class="px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Left side: Logo & Menu Toggle -->
+                <div class="flex items-center space-x-4">
+                    <button id="sidebarToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none lg:hidden">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <i class="fas fa-chalkboard-teacher text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-800">SPA Sistem Penilaian Akademik</h1>
+                            <p class="text-xs text-gray-500">Dashboard Dosen</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right side: User Menu -->
+                <div class="flex items-center space-x-4">
+                    <!-- User Dropdown -->
+                    <div class="relative" id="userDropdown">
+                        <button class="flex items-center space-x-3 focus:outline-none">
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                A
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-semibold text-gray-700">Amirawati M.kom</p>
+                                <p class="text-xs text-gray-500">NIP-123456</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50 hidden">
+                            <a href="/dosen/profil" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user mr-2"></i> Profil Saya
+                            </a>
+                            <hr class="my-2">
+                            <form method="POST" action="/logout" class="block w-full">
+                                @csrf
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-black text-white pt-20 z-40 sidebar-transition transform lg:translate-x-0 -translate-x-full overflow-y-auto">
+        <div class="px-4 py-6 space-y-2">
+            <!-- Dashboard -->
+            <a href="/dosen/dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-800 transition-colors menu-item bg-blue-600" data-menu="dashboard">
+                <i class="fas fa-home text-lg w-5"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+
+            <!-- Kelola Data Mahasiswa -->
+            <a href="/dosen/mahasiswas" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-800 transition-colors menu-item" data-menu="mahasiswas">
+                <i class="fas fa-user-graduate text-lg w-5"></i>
+                <span class="font-medium">Kelola Data Mahasiswa</span>
+            </a>
+
+            <!-- Kelola Mata Kuliah -->
+            <a href="/dosen/matakuliahs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-800 transition-colors menu-item" data-menu="matakuliahs">
+                <i class="fas fa-book text-lg w-5"></i>
+                <span class="font-medium">Kelola Mata Kuliah</span>
+            </a>
+
+            <!-- Komponen Penilaian -->
+            <a href="/dosen/komponen-penilaian" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-800 transition-colors menu-item" data-menu="komponen-penilaian">
+                <i class="fas fa-clipboard-check text-lg w-5"></i>
+                <span class="font-medium">Komponen Penilaian</span>
+            </a>
+
+            <!-- Input Nilai -->
+            <a href="/dosen/nilai-mahasiswa" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-800 transition-colors menu-item" data-menu="nilai-mahasiswa">
+                <i class="fas fa-pen-to-square text-lg w-5"></i>
+                <span class="font-medium">Input Nilai</span>
+            </a>
+
+            <!-- Laporan Nilai -->
+            <a href="/dosen/laporan-nilai" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-800 transition-colors menu-item" data-menu="laporan-nilai">
+                <i class="fas fa-file-alt text-lg w-5"></i>
+                <span class="font-medium">Laporan Nilai</span>
+            </a>
+
+            <hr class="my-4 border-gray-700">
+
+            <!-- Profil Dosen -->
+            <a href="/dosen/profil" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-800 transition-colors menu-item" data-menu="profil">
+                <i class="fas fa-user-circle text-lg w-5"></i>
+                <span class="font-medium">Profil Saya</span>
+            </a>
+
+            <!-- Logout -->
+            <form method="POST" action="/logout" class="w-full">
+                @csrf
+                <button type="submit" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition-colors text-left">
+                    <i class="fas fa-sign-out-alt text-lg w-5"></i>
+                    <span class="font-medium">Dosen Keluar</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Info Dosen Card -->
+        <div class="mx-4 my-6 bg-gray-900 bg-opacity-50 rounded-lg p-4 border border-gray-700">
+            <div class="flex items-center space-x-3 mb-3">
+                <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
+                    A
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-white whitespace-nowrap">Amirawati M.kom</p>
+                    <p class="text-xs text-gray-300 mt-1">NIP-123456</p>
+                </div>
+            </div>
+            <div class="text-xs">
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Mata Kuliah:</span>
+                    <span class="text-white font-semibold">3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Sidebar -->
+        <div class="px-4 py-4 border-t border-gray-700">
+            <div class="text-xs text-gray-400 text-center">
+                <p> 2025 SIAKAD</p>
+                <p class="mt-1">Version 1.0</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden lg:hidden"></div>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 pt-20 min-h-screen">
+        <div class="p-6">
+            <!-- Page Title -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                <p class="text-gray-600 text-sm mt-1">Ringkasan aktivitas dan statistik akademik</p>
+            </div>
+
+            <!-- Content Dashboard -->
+            <div class="space-y-6">
+                <!-- Statistik Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Jumlah Mahasiswa -->
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-blue-100 text-sm font-medium mb-1">Mahasiswa Terdaftar</p>
+                                <p class="text-3xl font-bold">25</p>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                <i class="fas fa-user-graduate text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jumlah Mata Kuliah -->
+                    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-green-100 text-sm font-medium mb-1">Mata Kuliah Diampu</p>
+                                <p class="text-3xl font-bold">3</p>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                <i class="fas fa-book text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nilai Tertinggi -->
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-purple-100 text-sm font-medium mb-1">Nilai Tertinggi</p>
+                                <p class="text-3xl font-bold">95.50</p>
+                                <p class="text-xs text-purple-100 mt-1">Ahmad Rizki</p>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                <i class="fas fa-arrow-up text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nilai Terendah -->
+                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-orange-100 text-sm font-medium mb-1">Nilai Terendah</p>
+                                <p class="text-3xl font-bold">65.00</p>
+                                <p class="text-xs text-orange-100 mt-1">Budi Santoso</p>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                <i class="fas fa-arrow-down text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Cepat -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                        <i class="fas fa-bolt text-blue-600 mr-2"></i>Menu Cepat
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <a href="/dosen/nilai-mahasiswa" class="flex items-center space-x-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all shadow-md hover:shadow-lg">
+                            <div class="bg-blue-600 text-white p-3 rounded-lg">
+                                <i class="fas fa-pen-to-square text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-800">Input Nilai</p>
+                                <p class="text-xs text-gray-600">Input nilai mahasiswa</p>
+                            </div>
+                        </a>
+
+                        <a href="/dosen/komponen-penilaian" class="flex items-center space-x-4 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg hover:from-green-100 hover:to-green-200 transition-all shadow-md hover:shadow-lg">
+                            <div class="bg-green-600 text-white p-3 rounded-lg">
+                                <i class="fas fa-clipboard-check text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-800">Komponen Penilaian</p>
+                                <p class="text-xs text-gray-600">Atur komponen penilaian</p>
+                            </div>
+                        </a>
+
+                        <a href="/dosen/matakuliahs" class="flex items-center space-x-4 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg hover:from-purple-100 hover:to-purple-200 transition-all shadow-md hover:shadow-lg">
+                            <div class="bg-purple-600 text-white p-3 rounded-lg">
+                                <i class="fas fa-book text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-800">Kelola Mata Kuliah</p>
+                                <p class="text-xs text-gray-600">Kelola data mata kuliah</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Daftar Mata Kuliah -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                        <i class="fas fa-list text-purple-600 mr-2"></i>Daftar Mata Kuliah
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">No</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Kode MK</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Nama Mata Kuliah</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Semester</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase">SKS</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jumlah Mahasiswa</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-gray-700">1</td>
+                                    <td class="px-4 py-3 text-sm font-semibold text-gray-900">TIF101</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">Pemrograman Web</td>
+                                    <td class="px-4 py-3 text-sm text-center text-gray-700">3</td>
+                                    <td class="px-4 py-3 text-sm text-center text-gray-700">3</td>
+                                    <td class="px-4 py-3 text-sm text-center">
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                            15 mahasiswa
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-gray-700">2</td>
+                                    <td class="px-4 py-3 text-sm font-semibold text-gray-900">TIF102</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">Basis Data</td>
+                                    <td class="px-4 py-3 text-sm text-center text-gray-700">3</td>
+                                    <td class="px-4 py-3 text-sm text-center text-gray-700">3</td>
+                                    <td class="px-4 py-3 text-sm text-center">
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                            18 mahasiswa
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-gray-700">3</td>
+                                    <td class="px-4 py-3 text-sm font-semibold text-gray-900">TIF103</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">Algoritma dan Struktur Data</td>
+                                    <td class="px-4 py-3 text-sm text-center text-gray-700">2</td>
+                                    <td class="px-4 py-3 text-sm text-center text-gray-700">4</td>
+                                    <td class="px-4 py-3 text-sm text-center">
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                            20 mahasiswa
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Sidebar Toggle Script -->
+    
+</body>
+</html>

@@ -1,0 +1,113 @@
+/* Custom Styles for Mahasiswa Management Page */
+
+/* Sidebar Transition */
+.sidebar-transition {
+    transition: transform 0.3s ease-in-out;
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* Table Styles */
+.table-container {
+    overflow-x: auto;
+}
+
+.table-header {
+    background: linear-gradient(to right, #2563eb, #9333ea);
+}
+
+/* Button Styles */
+.btn-gradient {
+    background: linear-gradient(to right, #2563eb, #9333ea);
+    transition: all 0.2s;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(to right, #1d4ed8, #7e22ce);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: #6b7280;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: #4b5563;
+}
+
+/* Action Buttons */
+.action-btn {
+    transition: color 0.2s;
+}
+
+.action-btn:hover {
+    opacity: 0.8;
+}
+
+/* Search Input */
+.search-input {
+    position: relative;
+}
+
+.search-input input {
+    padding-left: 2.5rem;
+}
+
+.search-input i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+/* Info Card */
+.info-card {
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+}
+
+/* Pagination */
+.pagination-btn {
+    transition: all 0.2s;
+}
+
+.pagination-btn:hover {
+    border-color: #d1d5db;
+    color: #4b5563;
+}
+
+.pagination-btn.active {
+    background-color: #2563eb;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .table-container {
+        overflow-x: scroll;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
