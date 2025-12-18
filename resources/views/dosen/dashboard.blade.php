@@ -41,12 +41,19 @@
                     <!-- User Dropdown -->
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
+                            @php
+                                $dosenId = session('user_id');
+                                $dosen = \App\Models\DataUserModel::find($dosenId);
+                                $namaDosen = $dosen ? $dosen->nama_user : session('nama_user', 'Dosen');
+                                $nipDosen = $dosen ? ($dosen->nip ?? 'NIP-') : 'NIP-';
+                                $initial = strtoupper(substr($namaDosen, 0, 1));
+                            @endphp
                             <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                                A
+                                {{ $initial }}
                             </div>
                             <div class="hidden md:block text-left">
-                                <p class="text-sm font-semibold text-gray-700">Amirawati M.kom</p>
-                                <p class="text-xs text-gray-500">NIP-123456</p>
+                                <p class="text-sm font-semibold text-gray-700">{{ $namaDosen }}</p>
+                                <p class="text-xs text-gray-500">{{ $nipDosen }}</p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                         </button>
@@ -129,19 +136,22 @@
 
         <!-- Info Dosen Card -->
         <div class="mx-4 my-6 bg-gray-900 bg-opacity-50 rounded-lg p-4 border border-gray-700">
+            @php
+                $totalMatakuliah = \App\Models\MatakuliahModel::where('dosen_id', $dosenId)->count();
+            @endphp
             <div class="flex items-center space-x-3 mb-3">
                 <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
-                    A
+                    {{ $initial }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-white whitespace-nowrap">Amirawati M.kom</p>
-                    <p class="text-xs text-gray-300 mt-1">NIP-123456</p>
+                    <p class="text-sm font-bold text-white whitespace-nowrap">{{ $namaDosen }}</p>
+                    <p class="text-xs text-gray-300 mt-1">{{ $nipDosen }}</p>
                 </div>
             </div>
             <div class="text-xs">
                 <div class="flex justify-between">
                     <span class="text-gray-300">Mata Kuliah:</span>
-                    <span class="text-white font-semibold">3</span>
+                    <span class="text-white font-semibold">{{ $totalMatakuliah }}</span>
                 </div>
             </div>
         </div>
@@ -327,6 +337,42 @@
     </main>
 
     <!-- Sidebar Toggle Script -->
-    
+    <script>
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            });
+        }
+
+        // User dropdown functionality
+        const userDropdown = document.getElementById('userDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        if (userDropdown) {
+            userDropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userDropdown.contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

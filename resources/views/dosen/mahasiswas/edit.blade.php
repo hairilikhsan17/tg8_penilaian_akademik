@@ -165,9 +165,26 @@
 
             <div class="space-y-6">
                 <div class="bg-white rounded-lg shadow-lg p-6">
-                    <form method="POST" action="/dosen/mahasiswas/1" class="space-y-6">
+                    <form method="POST" action="/dosen/mahasiswas/{{ $mahasiswa->id }}" class="space-y-6">
                         @csrf
                         @method('PUT')
+
+                        <!-- Error Messages -->
+                        @if($errors->any())
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                                <div>
+                                    <p class="text-sm font-semibold text-red-700">Terdapat kesalahan:</p>
+                                    <ul class="mt-1 text-sm text-red-600 list-disc list-inside">
+                                        @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- NIM -->
@@ -178,9 +195,13 @@
                                 <input type="text" 
                                        id="nim" 
                                        name="nim" 
+                                       value="{{ old('nim', $mahasiswa->nim) }}"
                                        required
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                        placeholder="Masukkan NIM">
+                                @error('nim')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Nama -->
@@ -191,9 +212,13 @@
                                 <input type="text" 
                                        id="nama" 
                                        name="nama" 
+                                       value="{{ old('nama', $mahasiswa->nama_user) }}"
                                        required
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                        placeholder="Masukkan nama lengkap">
+                                @error('nama')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Semester -->
@@ -204,11 +229,15 @@
                                 <input type="number" 
                                        id="semester" 
                                        name="semester" 
+                                       value="{{ old('semester', $mahasiswa->semester) }}"
                                        required
                                        min="1" 
                                        max="14"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                        placeholder="1-14">
+                                @error('semester')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Jurusan -->
@@ -219,9 +248,13 @@
                                 <input type="text" 
                                        id="jurusan" 
                                        name="jurusan" 
+                                       value="{{ old('jurusan', $mahasiswa->jurusan) }}"
                                        required
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                        placeholder="Masukkan jurusan">
+                                @error('jurusan')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Email -->
@@ -232,8 +265,12 @@
                                 <input type="email" 
                                        id="email" 
                                        name="email" 
+                                       value="{{ old('email', $mahasiswa->username) }}"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                        placeholder="contoh@email.com">
+                                @error('email')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 

@@ -162,6 +162,32 @@
             </div>
 
             <div class="space-y-6">
+                <!-- Error Messages -->
+                @if($errors->any())
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-red-700">Terdapat kesalahan:</p>
+                            <ul class="mt-1 text-sm text-red-600 list-disc list-inside">
+                                @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                @if(session('error'))
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                        <p class="text-sm text-red-700">{{ session('error') }}</p>
+                    </div>
+                </div>
+                @endif
+
                 <div class="bg-white rounded-lg shadow-lg p-6">
                     <form method="POST" action="/dosen/matakuliahs" class="space-y-6">
                         @csrf
@@ -175,10 +201,14 @@
                                 <input type="text" 
                                        id="kode_mk" 
                                        name="kode_mk" 
-                                       
+                                       value="{{ old('kode_mk') }}"
+                                       required
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                        placeholder="Contoh: MK001, TIF101">
                                 <p class="mt-1 text-xs text-gray-500">Kode unik untuk mata kuliah</p>
+                                @error('kode_mk')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Nama Mata Kuliah -->
@@ -189,9 +219,13 @@
                                 <input type="text" 
                                        id="nama_mk" 
                                        name="nama_mk" 
-                                     
+                                       value="{{ old('nama_mk') }}"
+                                       required
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                        placeholder="Masukkan nama mata kuliah">
+                                @error('nama_mk')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Semester -->
@@ -201,11 +235,16 @@
                                 </label>
                                 <select id="semester" 
                                         name="semester" 
-                                      
+                                        required
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                                     <option value="">Pilih Semester</option>
-                                    <!-- Options akan di-generate oleh JavaScript -->
+                                    @for($i = 1; $i <= 14; $i++)
+                                    <option value="{{ $i }}" {{ old('semester') == $i ? 'selected' : '' }}>Semester {{ $i }}</option>
+                                    @endfor
                                 </select>
+                                @error('semester')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- SKS -->
@@ -215,11 +254,16 @@
                                 </label>
                                 <select id="sks" 
                                         name="sks" 
-                                        
+                                        required
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                                     <option value="">Pilih SKS</option>
-                                    <!-- Options akan di-generate oleh JavaScript -->
+                                    @for($i = 1; $i <= 6; $i++)
+                                    <option value="{{ $i }}" {{ old('sks') == $i ? 'selected' : '' }}>{{ $i }} SKS</option>
+                                    @endfor
                                 </select>
+                                @error('sks')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Dosen Pengampu (Auto-filled) -->
@@ -230,7 +274,7 @@
                                     </label>
                                     <p class="text-sm text-blue-700">
                                         <i class="fas fa-user-tie mr-2"></i>
-                                        <strong id="dosenName">Amirawati M.kom</strong> (Anda)
+                                        <strong id="dosenName">{{ session('nama_user') }}</strong> (Anda)
                                     </p>
                                     <p class="text-xs text-blue-600 mt-1">Mata kuliah ini akan otomatis diampu oleh Anda</p>
                                 </div>

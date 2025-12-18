@@ -70,8 +70,34 @@
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .border-red-500 {
+            border-color: #ef4444 !important;
+        }
         .error-message {
             color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
+        /* Style untuk text error yang muncul langsung setelah input */
+        .form-group .form-input + *,
+        .form-group .form-select + * {
+            color: #ef4444 !important;
             font-size: 0.875rem;
             margin-top: 0.5rem;
             display: block;
@@ -136,25 +162,39 @@
             <p>Masuk ke akun Anda</p>
         </div>
 
+        @if(session('success'))
+            <div class="alert" style="background-color: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert" style="background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <form method="POST" action="/login">
             @csrf
-            <!-- Tampilan saja - tidak perlu input data -->
             <div class="form-group">
-                <label for="email" class="form-label">Email</label>
-                <input id="email" name="email" type="email" 
-                       value="dummy@example.com" 
-                       class="form-input" 
-                       placeholder="contoh@email.com"
-                       disabled>
+                <label for="username" class="form-label">Username</label>
+                <input id="username" name="username" type="text" 
+                       class="form-input @error('username') border-red-500 @enderror" 
+                       placeholder="Masukkan username"
+                       value="{{ old('username') }}">
+                @error('username')
+                    <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
                 <input id="password" name="password" type="password" 
-                       value="********" 
-                       class="form-input" 
-                       placeholder="Masukkan password"
-                       disabled>
+                       class="form-input @error('password') border-red-500 @enderror" 
+                       placeholder="Masukkan password">
+                @error('password')
+                    <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="form-checkbox">

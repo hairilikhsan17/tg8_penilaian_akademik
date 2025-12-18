@@ -168,20 +168,37 @@
                     <!-- Info Mahasiswa -->
                     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-6">
                         <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-4" id="mahasiswaInitial">
-                                H
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                {{ strtoupper(substr($mahasiswa->nama_user, 0, 1)) }}
                             </div>
                             <div>
-                                <h3 class="font-semibold text-gray-800" id="mahasiswaNama">Hairil Ikhsan</h3>
-                                <p class="text-sm text-gray-600" id="mahasiswaInfo">NIM: 221118 | Teknik Komputer</p>
-                                <p class="text-xs text-blue-600 mt-1" id="userAccountInfo">
+                                <h3 class="font-semibold text-gray-800">{{ $mahasiswa->nama_user }}</h3>
+                                <p class="text-sm text-gray-600">NIM: {{ $mahasiswa->nim ?? '-' }} | {{ $mahasiswa->jurusan ?? '-' }}</p>
+                                <p class="text-xs text-blue-600 mt-1">
                                     <i class="fas fa-check-circle"></i> User account sudah tersedia
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <form method="POST" action="/dosen/mahasiswas/1/password" class="space-y-6">
+                    <!-- Error Messages -->
+                    @if($errors->any())
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-red-700">Terdapat kesalahan:</p>
+                                <ul class="mt-1 text-sm text-red-600 list-disc list-inside">
+                                    @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <form method="POST" action="/dosen/mahasiswas/{{ $mahasiswa->id }}/password" class="space-y-6">
                         @csrf
 
                         <div class="space-y-4">
@@ -235,7 +252,7 @@
                                     <p class="font-semibold mb-1">Informasi Penting:</p>
                                     <ul class="list-disc list-inside space-y-1 text-xs">
                                         <li>Password ini akan digunakan mahasiswa untuk login ke sistem</li>
-                                        <li>Email untuk login: <strong id="loginEmail">hairil@gmail.com</strong></li>
+                                        <li>Username untuk login: <strong>{{ $mahasiswa->username }}</strong></li>
                                         <li>Pastikan untuk memberikan informasi login ini kepada mahasiswa</li>
                                     </ul>
                                 </div>

@@ -42,7 +42,7 @@
             display: block;
         }
         
-        /* Edit/View Mode Toggle dengan :target */
+        /* Edit/View Mode Toggle - akan dikontrol oleh JavaScript */
         #viewMode {
             display: block;
         }
@@ -57,42 +57,6 @@
         
         #cancelEditBtn {
             display: none;
-        }
-        
-        /* Ketika anchor #edit aktif, tampilkan edit mode */
-        main:has(#edit:target) #mainContent #viewMode {
-            display: none;
-        }
-        
-        main:has(#edit:target) #mainContent #editMode {
-            display: block;
-        }
-        
-        main:has(#edit:target) #mainContent #editBtn {
-            display: none;
-        }
-        
-        main:has(#edit:target) #mainContent #cancelEditBtn {
-            display: flex;
-        }
-        
-        /* Fallback untuk browser yang tidak support :has() */
-        @supports not selector(:has(*)) {
-            #edit:target ~ div #mainContent #viewMode {
-                display: none;
-            }
-            
-            #edit:target ~ div #mainContent #editMode {
-                display: block;
-            }
-            
-            #edit:target ~ div #mainContent #editBtn {
-                display: none;
-            }
-            
-            #edit:target ~ div #mainContent #cancelEditBtn {
-                display: flex;
-            }
         }
         
         /* Mobile sidebar */
@@ -147,11 +111,11 @@
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
                             <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
-                                H
+                                {{ strtoupper(substr($nama ?? $user->nama_user ?? 'M', 0, 1)) }}
                             </div>
                             <div class="hidden md:block text-left">
-                                <p class="text-sm font-semibold text-gray-700">Hairil Ikhsan</p>
-                                <p class="text-xs text-gray-500">221118</p>
+                                <p class="text-sm font-semibold text-gray-700">{{ $nama ?? $user->nama_user ?? 'Mahasiswa' }}</p>
+                                <p class="text-xs text-gray-500">{{ $nim ?? $user->nim ?? '-' }}</p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                         </button>
@@ -218,21 +182,21 @@
         <div class="mx-4 my-6 bg-blue-800 bg-opacity-50 rounded-lg p-4 border border-blue-700">
             <div class="flex items-center space-x-3 mb-3">
                 <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    H
+                    {{ strtoupper(substr($nama ?? $user->nama_user ?? 'M', 0, 1)) }}
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-bold text-white truncate">Hairil Ikhsan</p>
-                    <p class="text-xs text-blue-300">221118</p>
+                    <p class="text-sm font-bold text-white truncate">{{ $nama ?? $user->nama_user ?? 'Mahasiswa' }}</p>
+                    <p class="text-xs text-blue-300">{{ $nim ?? $user->nim ?? '-' }}</p>
                 </div>
             </div>
             <div class="space-y-2 text-xs">
                 <div class="flex justify-between">
                     <span class="text-blue-300">Semester:</span>
-                    <span class="text-white font-semibold">1</span>
+                    <span class="text-white font-semibold">{{ $semester ?? $user->semester ?? '-' }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-blue-300">IPK:</span>
-                    <span class="text-white font-semibold">3.75</span>
+                    <span class="text-white font-semibold">{{ $ipk ?? '0.00' }}</span>
                 </div>
             </div>
         </div>
@@ -261,32 +225,54 @@
 
             <div class="space-y-6" id="mainContent">
                 <!-- Alert Success/Error -->
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg" style="display: none;" id="successAlert">
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        <p id="successMessage"></p>
+                @if(session('success'))
+                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <p>{{ session('success') }}</p>
+                        </div>
                     </div>
-                </div>
+                @endif
 
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" style="display: none;" id="errorAlert">
-                    <div class="flex items-center">
-                        <i class="fas fa-exclamation-circle mr-2"></i>
-                        <p id="errorMessage"></p>
+                @if(session('error'))
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <p>{{ session('error') }}</p>
+                        </div>
                     </div>
-                </div>
+                @endif
+
+                @if($errors->any())
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <div>
+                                <p class="font-semibold">Terjadi kesalahan:</p>
+                                <ul class="list-disc list-inside mt-1">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Profile Information Card -->
                 <div class="bg-white rounded-lg shadow-lg p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-bold text-gray-800">Informasi Profil</h3>
-                        <a href="/mahasiswa/profil" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center" id="cancelEditBtn">
-                            <i class="fas fa-times mr-1"></i> 
-                            <span>Batal Edit</span>
-                        </a>
-                        <a href="#edit" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center" id="editBtn">
-                            <i class="fas fa-edit mr-1"></i> 
-                            <span>Edit Profil</span>
-                        </a>
+                        <div class="flex items-center space-x-3">
+                            <a href="/mahasiswa/profil" class="text-gray-600 hover:text-gray-700 text-sm font-medium flex items-center" id="cancelEditBtn" style="display: none;">
+                                <i class="fas fa-times mr-1"></i> 
+                                <span>Batal Edit</span>
+                            </a>
+                            <a href="#edit" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center" id="editBtn">
+                                <i class="fas fa-edit mr-1"></i> 
+                                <span>Edit Profil</span>
+                            </a>
+                        </div>
                     </div>
                     
                     <div id="viewMode">
@@ -315,7 +301,7 @@
                                     </div>
                                     <label for="upload-foto-empty-view" class="cursor-pointer" id="avatarEmpty">
                                         <div class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-blue-500 relative group">
-                                            <span id="avatarInitial">M</span>
+                                            <span id="avatarInitial">{{ strtoupper(substr($nama ?? $user->nama_user, 0, 1)) }}</span>
                                             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-all duration-200">
                                                 <i class="fas fa-camera text-white text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
                                             </div>
@@ -347,7 +333,7 @@
                                     </form>
                                 </div>
                                 <div>
-                                    <h4 class="text-2xl font-bold text-gray-800" id="viewNama">Hairil Ikhsan</h4>
+                                    <h4 class="text-2xl font-bold text-gray-800" id="viewNama">{{ $nama ?? $user->nama_user }}</h4>
                                     <p class="text-gray-500 mt-1">Mahasiswa</p>
                                     <p class="text-xs text-gray-400 mt-1" id="avatarInfo">
                                         <i class="fas fa-info-circle mr-1"></i> Klik avatar untuk upload foto profil
@@ -359,7 +345,7 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-gray-600">NIM</label>
                                 <div class="bg-gray-50 rounded-lg p-3">
-                                    <p class="text-gray-800" id="viewNim">-</p>
+                                    <p class="text-gray-800" id="viewNim">{{ $nim ?? '-' }}</p>
                                 </div>
                             </div>
 
@@ -367,7 +353,7 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-gray-600">Nama Lengkap</label>
                                 <div class="bg-gray-50 rounded-lg p-3">
-                                    <p class="text-gray-800" id="viewNamaFull">-</p>
+                                    <p class="text-gray-800" id="viewNamaFull">{{ $nama ?? $user->nama_user }}</p>
                                 </div>
                             </div>
 
@@ -375,7 +361,7 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-gray-600">Email Mahasiswa</label>
                                 <div class="bg-gray-50 rounded-lg p-3">
-                                    <p class="text-gray-800" id="viewEmail">-</p>
+                                    <p class="text-gray-800" id="viewEmail">{{ $email ?? $user->username }}</p>
                                 </div>
                             </div>
 
@@ -383,7 +369,7 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-gray-600">Email Login</label>
                                 <div class="bg-gray-50 rounded-lg p-3">
-                                    <p class="text-gray-800" id="viewUserEmail">-</p>
+                                    <p class="text-gray-800" id="viewUserEmail">{{ $user_email ?? $user->username }}</p>
                                 </div>
                             </div>
 
@@ -391,7 +377,7 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-gray-600">Semester Aktif</label>
                                 <div class="bg-gray-50 rounded-lg p-3">
-                                    <p class="text-gray-800" id="viewSemester">-</p>
+                                    <p class="text-gray-800" id="viewSemester">{{ $semester ?? '-' }}</p>
                                 </div>
                             </div>
 
@@ -399,7 +385,7 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-gray-600">Jurusan</label>
                                 <div class="bg-gray-50 rounded-lg p-3">
-                                    <p class="text-gray-800" id="viewJurusan">-</p>
+                                    <p class="text-gray-800" id="viewJurusan">{{ $jurusan ?? '-' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -414,7 +400,7 @@
                                 <div class="md:col-span-2 flex items-center space-x-6 pb-6 border-b border-gray-200">
                                     <div class="relative">
                                         <div id="preview-foto" class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-blue-500">
-                                            <span id="previewInitial">M</span>
+                                            <span id="previewInitial">{{ strtoupper(substr($nama ?? $user->nama_user, 0, 1)) }}</span>
                                         </div>
                                         <label for="foto_profil" class="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors">
                                             <i class="fas fa-camera text-sm"></i>
@@ -422,7 +408,7 @@
                                         <input type="file" id="foto_profil" name="foto_profil" accept="image/*" class="hidden">
                                     </div>
                                     <div>
-                                        <h4 class="text-2xl font-bold text-gray-800" id="editNama">Hairil Ikhsan</h4>
+                                        <h4 class="text-2xl font-bold text-gray-800" id="editNama">{{ $nama ?? $user->nama_user }}</h4>
                                         <p class="text-gray-500 mt-1">Mahasiswa</p>
                                         <p class="text-xs text-gray-400 mt-1">Klik ikon kamera untuk mengganti foto</p>
                                     </div>
@@ -431,14 +417,15 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <!-- NIM -->
                                     <div class="space-y-2">
-                                        <label class="text-sm font-semibold text-gray-600">NIM <span class="text-red-500">*</span></label>
+                                        <label class="text-sm font-semibold text-gray-600">NIM</label>
                                         <input type="text" 
                                                name="nim" 
                                                id="editNim"
-                                               value="" 
-                                               required
+                                               value="{{ old('nim', $nim ?? '') }}" 
                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <p class="text-red-500 text-xs mt-1" id="errorNim" style="display: none;"></p>
+                                        @error('nim')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <!-- Nama -->
@@ -447,22 +434,25 @@
                                         <input type="text" 
                                                name="nama" 
                                                id="editNamaInput"
-                                               value="" 
+                                               value="{{ old('nama', $nama ?? $user->nama_user) }}" 
                                                required
                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <p class="text-red-500 text-xs mt-1" id="errorNama" style="display: none;"></p>
+                                        @error('nama')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <!-- Email Mahasiswa -->
                                     <div class="space-y-2">
-                                        <label class="text-sm font-semibold text-gray-600">Email Mahasiswa <span class="text-red-500">*</span></label>
+                                        <label class="text-sm font-semibold text-gray-600">Email Mahasiswa</label>
                                         <input type="email" 
                                                name="email" 
                                                id="editEmail"
-                                               value="" 
-                                               required
+                                               value="{{ old('email', $email ?? $user->username) }}" 
                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <p class="text-red-500 text-xs mt-1" id="errorEmail" style="display: none;"></p>
+                                        @error('email')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <!-- Email Login -->
@@ -471,41 +461,41 @@
                                         <input type="email" 
                                                name="user_email" 
                                                id="editUserEmail"
-                                               value="" 
+                                               value="{{ old('user_email', $user_email ?? $user->username) }}" 
                                                required
                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <p class="text-red-500 text-xs mt-1" id="errorUserEmail" style="display: none;"></p>
+                                        @error('user_email')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <!-- Semester -->
                                     <div class="space-y-2">
-                                        <label class="text-sm font-semibold text-gray-600">Semester Aktif <span class="text-red-500">*</span></label>
+                                        <label class="text-sm font-semibold text-gray-600">Semester Aktif</label>
                                         <select name="semester" 
                                                 id="editSemester"
-                                                required
                                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="1">Semester 1</option>
-                                            <option value="2">Semester 2</option>
-                                            <option value="3">Semester 3</option>
-                                            <option value="4">Semester 4</option>
-                                            <option value="5">Semester 5</option>
-                                            <option value="6">Semester 6</option>
-                                            <option value="7">Semester 7</option>
-                                            <option value="8">Semester 8</option>
+                                            <option value="">Pilih Semester</option>
+                                            @for($i = 1; $i <= 14; $i++)
+                                                <option value="{{ $i }}" {{ old('semester', $semester ?? '') == $i ? 'selected' : '' }}>Semester {{ $i }}</option>
+                                            @endfor
                                         </select>
-                                        <p class="text-red-500 text-xs mt-1" id="errorSemester" style="display: none;"></p>
+                                        @error('semester')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <!-- Jurusan -->
                                     <div class="space-y-2">
-                                        <label class="text-sm font-semibold text-gray-600">Jurusan <span class="text-red-500">*</span></label>
+                                        <label class="text-sm font-semibold text-gray-600">Jurusan</label>
                                         <input type="text" 
                                                name="jurusan" 
                                                id="editJurusan"
-                                               value="" 
-                                               required
+                                               value="{{ old('jurusan', $jurusan ?? '') }}" 
                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <p class="text-red-500 text-xs mt-1" id="errorJurusan" style="display: none;"></p>
+                                        @error('jurusan')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <!-- Password -->
@@ -515,7 +505,9 @@
                                                name="password" 
                                                id="editPassword"
                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <p class="text-red-500 text-xs mt-1" id="errorPassword" style="display: none;"></p>
+                                        @error('password')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <!-- Password Confirmation -->
@@ -525,15 +517,19 @@
                                                name="password_confirmation" 
                                                id="editPasswordConfirmation"
                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        @error('password_confirmation')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
                                 </div>
 
                                 <!-- Submit Button -->
                                 <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-                                    <a href="/mahasiswa/profil" 
-                                       class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                                        Batal
-                                    </a>
+                                    <button type="button" 
+                                            onclick="toggleEditMode()"
+                                            class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                        <i class="fas fa-times mr-2"></i> Batal
+                                    </button>
                                     <button type="submit" 
                                             class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                                         <i class="fas fa-save mr-2"></i> Simpan Perubahan
@@ -580,6 +576,98 @@
         </div>
     </main>
 
+    <script>
+        // Toggle Edit/View Mode dengan JavaScript
+        function toggleEditMode() {
+            const viewMode = document.getElementById('viewMode');
+            const editMode = document.getElementById('editMode');
+            const editBtn = document.getElementById('editBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            
+            if (viewMode && editMode && editBtn && cancelEditBtn) {
+                // Toggle display
+                if (viewMode.style.display === 'none') {
+                    // Show view mode
+                    viewMode.style.display = 'block';
+                    editMode.style.display = 'none';
+                    editBtn.style.display = 'flex';
+                    cancelEditBtn.style.display = 'none';
+                } else {
+                    // Show edit mode
+                    viewMode.style.display = 'none';
+                    editMode.style.display = 'block';
+                    editBtn.style.display = 'none';
+                    cancelEditBtn.style.display = 'flex';
+                }
+            }
+        }
+
+        // Handle edit button click
+        document.addEventListener('DOMContentLoaded', function() {
+            const editBtn = document.getElementById('editBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            
+            if (editBtn) {
+                editBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleEditMode();
+                    // Scroll to top of form
+                    document.getElementById('editMode').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+            
+            if (cancelEditBtn) {
+                cancelEditBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleEditMode();
+                });
+            }
+
+            // Handle hash change (for browser back button)
+            window.addEventListener('hashchange', function() {
+                if (window.location.hash === '#edit') {
+                    toggleEditMode();
+                } else {
+                    const viewMode = document.getElementById('viewMode');
+                    const editMode = document.getElementById('editMode');
+                    const editBtn = document.getElementById('editBtn');
+                    const cancelEditBtn = document.getElementById('cancelEditBtn');
+                    
+                    if (viewMode && editMode) {
+                        viewMode.style.display = 'block';
+                        editMode.style.display = 'none';
+                        if (editBtn) editBtn.style.display = 'flex';
+                        if (cancelEditBtn) cancelEditBtn.style.display = 'none';
+                    }
+                }
+            });
+
+            // Check if hash is #edit on page load
+            if (window.location.hash === '#edit') {
+                toggleEditMode();
+            }
+        });
+
+        // Preview image when file is selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const fotoInput = document.getElementById('foto_profil');
+            if (fotoInput) {
+                fotoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const preview = document.getElementById('preview-foto');
+                            if (preview) {
+                                preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="w-24 h-24 rounded-full object-cover border-4 border-blue-500">`;
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>

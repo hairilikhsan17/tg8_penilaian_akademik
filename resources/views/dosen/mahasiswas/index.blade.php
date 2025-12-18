@@ -40,12 +40,19 @@
                 <div class="flex items-center space-x-4">
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
+                            @php
+                                $dosenId = session('user_id');
+                                $dosen = \App\Models\DataUserModel::find($dosenId);
+                                $namaDosen = $dosen ? $dosen->nama_user : session('nama_user', 'Dosen');
+                                $nipDosen = $dosen ? ($dosen->nip ?? 'NIP-') : 'NIP-';
+                                $initial = strtoupper(substr($namaDosen, 0, 1));
+                            @endphp
                             <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                                A
+                                {{ $initial }}
                             </div>
                             <div class="hidden md:block text-left">
-                                <p class="text-sm font-semibold text-gray-700">Amirawati M.kom</p>
-                                <p class="text-xs text-gray-500">NIP-123456</p>
+                                <p class="text-sm font-semibold text-gray-700">{{ $namaDosen }}</p>
+                                <p class="text-xs text-gray-500">{{ $nipDosen }}</p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                         </button>
@@ -111,19 +118,22 @@
         </div>
 
         <div class="mx-4 my-6 bg-gray-900 bg-opacity-50 rounded-lg p-4 border border-gray-700">
+            @php
+                $totalMatakuliah = \App\Models\MatakuliahModel::where('dosen_id', $dosenId)->count();
+            @endphp
             <div class="flex items-center space-x-3 mb-3">
                 <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
-                    A
+                    {{ $initial }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-white whitespace-nowrap">Amirawati M.kom</p>
-                    <p class="text-xs text-gray-300 mt-1">NIP-123456</p>
+                    <p class="text-sm font-bold text-white whitespace-nowrap">{{ $namaDosen }}</p>
+                    <p class="text-xs text-gray-300 mt-1">{{ $nipDosen }}</p>
                 </div>
             </div>
             <div class="text-xs space-y-1">
                 <div class="flex justify-between">
                     <span class="text-gray-300">Mata Kuliah:</span>
-                    <span class="text-white font-semibold">3</span>
+                    <span class="text-white font-semibold">{{ $totalMatakuliah }}</span>
                 </div>
             </div>
         </div>
@@ -171,16 +181,40 @@
 
             <!-- Search Box -->
             <div class="bg-white rounded-lg shadow-lg p-6">
-                <form class="flex gap-3">
+                <form method="GET" action="/dosen/mahasiswas" class="flex gap-3">
                     <div class="flex-1 relative">
-                        <input type="text" placeholder="Cari berdasarkan NIM atau Nama..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari berdasarkan NIM atau Nama..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
-                    <button type="button" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                         <i class="fas fa-search mr-2"></i>Cari
                     </button>
+                    @if($search ?? false)
+                    <a href="/dosen/mahasiswas" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-times mr-2"></i>Reset
+                    </a>
+                    @endif
                 </form>
             </div>
+
+            <!-- Success/Error Messages -->
+            @if(session('success'))
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                    <p class="text-sm text-green-700">{{ session('success') }}</p>
+                </div>
+            </div>
+            @endif
+
+            @if(session('error'))
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                    <p class="text-sm text-red-700">{{ session('error') }}</p>
+                </div>
+            </div>
+            @endif
 
             <!-- Tabel Mahasiswa -->
             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -198,72 +232,49 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($mahasiswas ?? [] as $index => $mahasiswa)
                             <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">1</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $index + 1 }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-semibold text-gray-900">221118</span>
+                                    <span class="text-sm font-semibold text-gray-900">{{ $mahasiswa->nim ?? '-' }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">Hairil Ikhsan</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $mahasiswa->nama_user }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        Semester 3
+                                        Semester {{ $mahasiswa->semester ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    Teknik Informatika
+                                    {{ $mahasiswa->jurusan ?? '-' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    hairil.ikhsan@email.com
+                                    {{ $mahasiswa->username ?? '-' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                     <div class="flex items-center justify-center space-x-2">
-                                        <a href="/dosen/mahasiswas/1/password" class="text-green-600 hover:text-green-900 transition-colors" title="Atur Password">
-                                            <i class="fas fa-key"></i>
-                                        </a>
-                                        <a href="/dosen/mahasiswas/1/edit" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
+                                        <a href="/dosen/mahasiswas/{{ $mahasiswa->id }}/edit" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="text-red-600 hover:text-red-900 transition-colors" title="Hapus">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <form method="POST" action="/dosen/mahasiswas/{{ $mahasiswa->id }}" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data mahasiswa ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-900 transition-colors" title="Hapus">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-semibold text-gray-900">1234567891</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">Budi Santoso</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        Semester 3
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    Teknik Informatika
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    budi.santoso@email.com
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <div class="flex items-center justify-center space-x-2">
-                                        <a href="/dosen/mahasiswas/2/password" class="text-green-600 hover:text-green-900 transition-colors" title="Atur Password">
-                                            <i class="fas fa-key"></i>
-                                        </a>
-                                        <a href="/dosen/mahasiswas/2/edit" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="text-red-600 hover:text-red-900 transition-colors" title="Hapus">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                                    <i class="fas fa-inbox text-4xl text-gray-300 mb-2 block"></i>
+                                    <p>Tidak ada data mahasiswa ditemukan.</p>
                                 </td>
                             </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -275,7 +286,7 @@
                     <i class="fas fa-info-circle text-blue-500 mr-3"></i>
                     <div>
                         <p class="text-sm text-blue-700">
-                            <strong>Total Mahasiswa:</strong> 2 data terdaftar.
+                            <strong>Total Mahasiswa:</strong> {{ count($mahasiswas ?? []) }} data terdaftar.
                             <span class="text-blue-600 ml-1">Pastikan data selalu terbarui sebelum input nilai.</span>
                         </p>
                     </div>
@@ -286,7 +297,43 @@
     </main>
 
     <!-- Sidebar Toggle Script -->
-    
+    <script>
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            });
+        }
+
+        // User dropdown functionality
+        const userDropdown = document.getElementById('userDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        if (userDropdown) {
+            userDropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userDropdown.contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+    </script>
 </body>
 </html>
 

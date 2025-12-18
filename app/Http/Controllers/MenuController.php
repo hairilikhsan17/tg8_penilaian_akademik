@@ -9,6 +9,16 @@ class MenuController extends Controller
     // Auth
     public function login()
     {
+        // Alur: Jika sudah login, jangan tampilkan form login lagi, redirect ke dashboard
+        if (session('login')) {
+            $role = session('role');
+            if ($role === 'dosen') {
+                return redirect('/dosen/dashboard');
+            } elseif ($role === 'mahasiswa') {
+                return redirect('/mahasiswa/dashboard');
+            }
+        }
+        // Jika belum login, tampilkan form login
         return view('auth.login');
     }
 
@@ -29,11 +39,26 @@ class MenuController extends Controller
 
     public function register()
     {
+        // Alur: Jika sudah login, jangan tampilkan form register lagi, redirect ke dashboard
+        if (session('login')) {
+            $role = session('role');
+            if ($role === 'dosen') {
+                return redirect('/dosen/dashboard');
+            } elseif ($role === 'mahasiswa') {
+                return redirect('/mahasiswa/dashboard');
+            }
+        }
+        // Jika belum login, tampilkan form register
         return view('auth.register');
     }
 
     public function registerPerform(Request $request)
     {
+        // Validasi input
+        $request->validate([
+            'role' => 'required',
+        ]);
+
         // Simpan role yang dipilih ke session
         $role = $request->input('role');
         
@@ -55,6 +80,8 @@ class MenuController extends Controller
     // Dashboard Dosen
     public function dosenDashboard()
     {
+        // Alur: Jika belum login, tidak bisa akses dashboard, redirect ke login
+        // Jika sudah login, tampilkan dashboard
         return view('dosen.dashboard');
     }
 
@@ -216,31 +243,319 @@ class MenuController extends Controller
     }
 
     // Dosen - Laporan
-    public function laporanIndex()
+    public function laporanIndex(Request $request)
     {
-        return view('dosen.laporan.index');
+        $dosenId = session('user_id');
+        
+        // Get all mata kuliah owned by this dosen for filter dropdown
+        $matakuliahs = \App\Models\MatakuliahModel::where('dosen_id', $dosenId)
+            ->orderBy('semester', 'asc')
+            ->orderBy('kode_mk', 'asc')
+            ->get();
+        
+        // Get unique semesters from mata kuliah
+        $semesters = \App\Models\MatakuliahModel::where('dosen_id', $dosenId)
+            ->distinct()
+            ->orderBy('semester', 'asc')
+            ->pluck('semester')
+            ->toArray();
+        
+        // Query nilai - only from mata kuliah owned by this dosen
+        $query = \App\Models\InputNilaiModel::with(['mahasiswa', 'matakuliah.komponenPenilaian'])
+            ->whereHas('matakuliah', function ($q) use ($dosenId) {
+                $q->where('dosen_id', $dosenId);
+            });
+        
+        // Filter by semester
+        if ($request->filled('semester')) {
+            $query->whereHas('matakuliah', function ($q) use ($request) {
+                $q->where('semester', (int)$request->semester);
+            });
+        }
+        
+        // Filter by matakuliah
+        if ($request->filled('matakuliah_id')) {
+            $query->where('matakuliah_id', $request->matakuliah_id);
+        }
+        
+        $nilai = $query->orderBy('matakuliah_id', 'asc')
+            ->orderBy('mahasiswa_id', 'asc')
+            ->paginate(50)
+            ->withQueryString();
+        
+        // Hitung jumlah maksimum tugas dan project dari semua nilai
+        $maxTugas = 1;
+        $maxProject = 1;
+        foreach ($nilai as $item) {
+            if ($item->tugas) {
+                $tugasArray = [];
+                if (is_string($item->tugas)) {
+                    $decoded = json_decode($item->tugas, true);
+                    $tugasArray = is_array($decoded) ? $decoded : [];
+                } elseif (is_array($item->tugas)) {
+                    $tugasArray = $item->tugas;
+                } else {
+                    $tugasArray = [(float)$item->tugas];
+                }
+                $maxTugas = max($maxTugas, count($tugasArray));
+            }
+            if ($item->project) {
+                $projectArray = [];
+                if (is_string($item->project)) {
+                    $decoded = json_decode($item->project, true);
+                    $projectArray = is_array($decoded) ? $decoded : [];
+                } elseif (is_array($item->project)) {
+                    $projectArray = $item->project;
+                } else {
+                    $projectArray = [(float)$item->project];
+                }
+                $maxProject = max($maxProject, count($projectArray));
+            }
+        }
+        
+        return view('dosen.laporan.index', compact('nilai', 'matakuliahs', 'semesters', 'maxTugas', 'maxProject'));
     }
 
-    public function laporanPdf()
+    public function laporanPdf(Request $request)
     {
-        return view('dosen.laporan.pdf');
+        $dosenId = session('user_id');
+        
+        // Query nilai - only from mata kuliah owned by this dosen
+        $query = \App\Models\InputNilaiModel::with(['mahasiswa', 'matakuliah.komponenPenilaian'])
+            ->whereHas('matakuliah', function ($q) use ($dosenId) {
+                $q->where('dosen_id', $dosenId);
+            });
+        
+        // Filter by semester (from query parameter)
+        if ($request->filled('semester')) {
+            $query->whereHas('matakuliah', function ($q) use ($request) {
+                $q->where('semester', (int)$request->semester);
+            });
+        }
+        
+        // Filter by matakuliah (from query parameter)
+        if ($request->filled('matakuliah_id')) {
+            $query->where('matakuliah_id', $request->matakuliah_id);
+        }
+        
+        $nilai = $query->orderBy('matakuliah_id', 'asc')
+            ->orderBy('mahasiswa_id', 'asc')
+            ->get();
+        
+        // Hitung jumlah maksimum tugas dan project dari semua nilai
+        $maxTugas = 1;
+        $maxProject = 1;
+        foreach ($nilai as $item) {
+            if ($item->tugas) {
+                $tugasArray = [];
+                if (is_string($item->tugas)) {
+                    $decoded = json_decode($item->tugas, true);
+                    $tugasArray = is_array($decoded) ? $decoded : [];
+                } elseif (is_array($item->tugas)) {
+                    $tugasArray = $item->tugas;
+                } else {
+                    $tugasArray = [(float)$item->tugas];
+                }
+                $maxTugas = max($maxTugas, count($tugasArray));
+            }
+            if ($item->project) {
+                $projectArray = [];
+                if (is_string($item->project)) {
+                    $decoded = json_decode($item->project, true);
+                    $projectArray = is_array($decoded) ? $decoded : [];
+                } elseif (is_array($item->project)) {
+                    $projectArray = $item->project;
+                } else {
+                    $projectArray = [(float)$item->project];
+                }
+                $maxProject = max($maxProject, count($projectArray));
+            }
+        }
+        
+        // Get filter info for display
+        $filterInfo = [];
+        if ($request->filled('semester')) {
+            $filterInfo[] = 'Semester ' . $request->semester;
+        }
+        if ($request->filled('matakuliah_id')) {
+            $matakuliah = \App\Models\MatakuliahModel::find($request->matakuliah_id);
+            if ($matakuliah) {
+                $filterInfo[] = $matakuliah->nama_mk;
+            }
+        }
+        
+        return view('dosen.laporan.pdf', compact('nilai', 'filterInfo', 'maxTugas', 'maxProject'));
     }
 
     // Mahasiswa - Nilai Akademik
-    public function mahasiswaNilai()
+    public function mahasiswaNilai(Request $request)
     {
-        return view('mahasiswa.nilai-akademik');
+        $mahasiswaId = session('user_id');
+        
+        // Get mahasiswa data
+        $mahasiswa = \App\Models\DataUserModel::find($mahasiswaId);
+        
+        if (!$mahasiswa || $mahasiswa->role !== 'mahasiswa') {
+            return redirect('/mahasiswa/dashboard')->with('error', 'Data mahasiswa tidak ditemukan.');
+        }
+        
+        // Query nilai dengan relasi
+        $query = \App\Models\InputNilaiModel::with(['matakuliah.komponenPenilaian'])
+            ->where('mahasiswa_id', $mahasiswaId);
+        
+        // Filter berdasarkan semester jika dipilih
+        if ($request->filled('semester')) {
+            $query->whereHas('matakuliah', function($q) use ($request) {
+                $q->where('semester', (int)$request->semester);
+            });
+        }
+        
+        $nilai = $query->orderBy('matakuliah_id', 'asc')->get();
+        
+        // Get daftar semester yang tersedia
+        $semesters = \App\Models\InputNilaiModel::where('mahasiswa_id', $mahasiswaId)
+            ->with('matakuliah')
+            ->get()
+            ->pluck('matakuliah.semester')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+        
+        // Hitung jumlah maksimum tugas dan project dari semua nilai
+        $maxTugas = 1;
+        $maxProject = 1;
+        foreach ($nilai as $item) {
+            if ($item->tugas) {
+                $tugasArray = [];
+                if (is_string($item->tugas)) {
+                    $decoded = json_decode($item->tugas, true);
+                    $tugasArray = is_array($decoded) ? $decoded : [];
+                } elseif (is_array($item->tugas)) {
+                    $tugasArray = $item->tugas;
+                } else {
+                    $tugasArray = [(float)$item->tugas];
+                }
+                $maxTugas = max($maxTugas, count($tugasArray));
+            }
+            if ($item->project) {
+                $projectArray = [];
+                if (is_string($item->project)) {
+                    $decoded = json_decode($item->project, true);
+                    $projectArray = is_array($decoded) ? $decoded : [];
+                } elseif (is_array($item->project)) {
+                    $projectArray = $item->project;
+                } else {
+                    $projectArray = [(float)$item->project];
+                }
+                $maxProject = max($maxProject, count($projectArray));
+            }
+        }
+        
+        return view('mahasiswa.nilai-akademik', compact('mahasiswa', 'nilai', 'semesters', 'maxTugas', 'maxProject'));
     }
 
     // Mahasiswa - KHS
     public function mahasiswaKhs()
     {
-        return view('mahasiswa.khs-transkrip');
+        $mahasiswaId = session('user_id');
+        
+        // Get mahasiswa data
+        $mahasiswa = \App\Models\DataUserModel::find($mahasiswaId);
+        
+        if (!$mahasiswa || $mahasiswa->role !== 'mahasiswa') {
+            return redirect('/mahasiswa/dashboard')->with('error', 'Data mahasiswa tidak ditemukan.');
+        }
+        
+        // Get all nilai
+        $nilai = \App\Models\InputNilaiModel::with('matakuliah')
+            ->where('mahasiswa_id', $mahasiswaId)
+            ->orderBy('matakuliah_id', 'asc')
+            ->get();
+        
+        // Hitung IPK dan Total SKS
+        $totalSKS = 0;
+        $totalBobot = 0;
+        
+        foreach ($nilai as $item) {
+            $sks = $item->matakuliah->sks ?? 0;
+            $totalSKS += $sks;
+            
+            // Konversi huruf mutu ke bobot
+            $hurufMutu = $item->huruf_mutu ?? '';
+            $bobot = 0;
+            if ($hurufMutu == 'A') $bobot = 4;
+            elseif ($hurufMutu == 'B') $bobot = 3;
+            elseif ($hurufMutu == 'C') $bobot = 2;
+            elseif ($hurufMutu == 'D') $bobot = 1;
+            elseif ($hurufMutu == 'E') $bobot = 0;
+            else {
+                // Jika belum ada huruf mutu, hitung dari nilai akhir
+                $nilaiAkhir = $item->nilai_akhir ?? 0;
+                if ($nilaiAkhir >= 85) $bobot = 4;
+                elseif ($nilaiAkhir >= 75) $bobot = 3;
+                elseif ($nilaiAkhir >= 65) $bobot = 2;
+                elseif ($nilaiAkhir >= 55) $bobot = 1;
+                else $bobot = 0;
+            }
+            
+            $totalBobot += $sks * $bobot;
+        }
+        
+        $ipk = $totalSKS > 0 ? $totalBobot / $totalSKS : 0;
+        
+        return view('mahasiswa.khs-transkrip', compact('mahasiswa', 'nilai', 'ipk', 'totalSKS'));
     }
 
     public function mahasiswaCetakKhs()
     {
-        return view('mahasiswa.cetak-khs');
+        $mahasiswaId = session('user_id');
+        
+        // Get mahasiswa data
+        $mahasiswa = \App\Models\DataUserModel::find($mahasiswaId);
+        
+        if (!$mahasiswa || $mahasiswa->role !== 'mahasiswa') {
+            return redirect('/mahasiswa/dashboard')->with('error', 'Data mahasiswa tidak ditemukan.');
+        }
+        
+        // Get all nilai
+        $nilai = \App\Models\InputNilaiModel::with('matakuliah')
+            ->where('mahasiswa_id', $mahasiswaId)
+            ->orderBy('matakuliah_id', 'asc')
+            ->get();
+        
+        // Hitung IPK dan Total SKS
+        $totalSKS = 0;
+        $totalBobot = 0;
+        
+        foreach ($nilai as $item) {
+            $sks = $item->matakuliah->sks ?? 0;
+            $totalSKS += $sks;
+            
+            // Konversi huruf mutu ke bobot
+            $hurufMutu = $item->huruf_mutu ?? '';
+            $bobot = 0;
+            if ($hurufMutu == 'A') $bobot = 4;
+            elseif ($hurufMutu == 'B') $bobot = 3;
+            elseif ($hurufMutu == 'C') $bobot = 2;
+            elseif ($hurufMutu == 'D') $bobot = 1;
+            elseif ($hurufMutu == 'E') $bobot = 0;
+            else {
+                // Jika belum ada huruf mutu, hitung dari nilai akhir
+                $nilaiAkhir = $item->nilai_akhir ?? 0;
+                if ($nilaiAkhir >= 85) $bobot = 4;
+                elseif ($nilaiAkhir >= 75) $bobot = 3;
+                elseif ($nilaiAkhir >= 65) $bobot = 2;
+                elseif ($nilaiAkhir >= 55) $bobot = 1;
+                else $bobot = 0;
+            }
+            
+            $totalBobot += $sks * $bobot;
+        }
+        
+        $ipk = $totalSKS > 0 ? $totalBobot / $totalSKS : 0;
+        
+        return view('mahasiswa.cetak-khs', compact('mahasiswa', 'nilai', 'ipk', 'totalSKS'));
     }
 }
 

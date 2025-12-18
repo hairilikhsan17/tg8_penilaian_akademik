@@ -83,6 +83,18 @@
             margin-top: 0.5rem;
             display: block;
         }
+        /* Styling untuk error message */
+        .form-group {
+            position: relative;
+        }
+        /* Style untuk text error yang muncul langsung setelah input */
+        .form-group .form-input + *,
+        .form-group .form-select + * {
+            color: #ef4444 !important;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
         .btn-submit {
             width: 100%;
             padding: 0.875rem;
@@ -126,94 +138,135 @@
             <h1 id="main-title">Registrasi Akun</h1>
             <p id="sub-title">Buat akun untuk mengakses sistem</p>
         </div>
-        <form method="POST" action="/register">
+        <form method="POST" action="/register" novalidate>
             @csrf
-            <!-- Form hanya untuk tampilan, tidak perlu input data -->
+            
+            <!-- Alert Success/Error -->
+            @if(session('success'))
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <p>{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert" style="background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <div class="form-group">
-                <label for="name" class="form-label">Nama Lengkap</label>
+                <label for="name" class="form-label">Nama Lengkap <span class="text-red-500">*</span></label>
                 <input id="name" name="name" type="text" 
-                       value="Contoh Nama" 
-                       class="form-input" 
+                       value="{{ old('name') }}" 
+                       class="form-input @error('name') border-red-500 @enderror" 
                        placeholder="Masukkan nama lengkap"
-                       disabled>
+                       required>
+                @error('name')
+                    <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="email" class="form-label">Email</label>
+                <label for="email" class="form-label">Email <span class="text-red-500">*</span></label>
                 <input id="email" name="email" type="email" 
-                       value="contoh@email.com" 
-                       class="form-input" 
+                       value="{{ old('email') }}" 
+                       class="form-input @error('email') border-red-500 @enderror" 
                        placeholder="contoh@email.com"
-                       disabled>
+                       required>
+                @error('email')
+                    <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="role" class="form-label">Daftar Sebagai</label>
-                <select id="role" name="role" class="form-select" required>
+                <label for="role" class="form-label">Daftar Sebagai <span class="text-red-500">*</span></label>
+                <select id="role" name="role" class="form-select @error('role') border-red-500 @enderror" required onchange="toggleRoleFields()">
                     <option value="">Pilih peran</option>
-                    <option value="dosen">Dosen</option>
-                    <option value="mahasiswa">Mahasiswa</option>
+                    <option value="dosen" {{ old('role') == 'dosen' ? 'selected' : '' }}>Dosen</option>
+                    <option value="mahasiswa" {{ old('role') == 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                 </select>
+                @error('role')
+                    <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Field untuk Mahasiswa -->
-            <div id="mahasiswa-fields" style="display: none;">
+            <div id="mahasiswa-fields" style="display: {{ old('role') === 'mahasiswa' ? 'block' : 'none' }};">
                 <div class="form-group">
-                    <label for="nim" class="form-label">NIM (Nomor Induk Mahasiswa)</label>
+                    <label for="nim" class="form-label">NIM (Nomor Induk Mahasiswa) <span class="text-red-500">*</span></label>
                     <input id="nim" name="nim" type="text" 
-                           value="1234567890" 
-                           class="form-input" 
+                           value="{{ old('nim') }}" 
+                           class="form-input @error('nim') border-red-500 @enderror" 
                            placeholder="Masukkan NIM"
-                           disabled>
+                           required>
+                    @error('nim')
+                        <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="semester" class="form-label">Semester</label>
+                    <label for="semester" class="form-label">Semester <span class="text-red-500">*</span></label>
                     <input id="semester" name="semester" type="number" min="1" max="14"
-                           value="3" 
-                           class="form-input" 
+                           value="{{ old('semester') }}" 
+                           class="form-input @error('semester') border-red-500 @enderror" 
                            placeholder="Masukkan semester (1-14)"
-                           disabled>
+                           required>
+                    @error('semester')
+                    <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="jurusan" class="form-label">Jurusan</label>
+                    <label for="jurusan" class="form-label">Jurusan <span class="text-red-500">*</span></label>
                     <input id="jurusan" name="jurusan" type="text" 
-                           value="Teknik Informatika" 
-                           class="form-input" 
+                           value="{{ old('jurusan') }}" 
+                           class="form-input @error('jurusan') border-red-500 @enderror" 
                            placeholder="Masukkan jurusan"
-                           disabled>
+                           required>
+                    @error('jurusan')
+                        <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <!-- Field untuk Dosen -->
-            <div id="dosen-fields" style="display: none;">
+            <div id="dosen-fields" style="display: {{ old('role') === 'dosen' ? 'block' : 'none' }};">
                 <div class="form-group">
-                    <label for="nip" class="form-label">NIP (Nomor Induk Pegawai)</label>
+                    <label for="nip" class="form-label">NIP (Nomor Induk Pegawai) <span class="text-red-500">*</span></label>
                     <input id="nip" name="nip" type="text" 
-                           value="19800101200001001" 
-                           class="form-input" 
+                           value="{{ old('nip') }}" 
+                           class="form-input @error('nip') border-red-500 @enderror" 
                            placeholder="Masukkan NIP"
-                           disabled>
+                           required>
+                    @error('nip')
+                        <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="password" class="form-label">Password</label>
+                <label for="password" class="form-label">Password <span class="text-red-500">*</span></label>
                 <input id="password" name="password" type="password" 
-                       value="********" 
-                       class="form-input" 
-                       placeholder="Minimal 8 karakter"
-                       disabled>
+                       class="form-input @error('password') border-red-500 @enderror" 
+                       placeholder="Masukkan password"
+                       required>
+                @error('password')
+                    <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
+                <label for="password_confirmation" class="form-label">Konfirmasi Password <span class="text-red-500">*</span></label>
                 <input id="password_confirmation" name="password_confirmation" type="password" 
-                       value="********" 
-                       class="form-input" 
+                       class="form-input @error('password_confirmation') border-red-500 @enderror" 
                        placeholder="Ulangi password"
-                       disabled>
+                       required>
+                @error('password_confirmation')
+                    <span style="color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;">{{ $message }}</span>
+                @enderror
             </div>
 
             <button type="submit" class="btn-submit">
@@ -225,6 +278,55 @@
             Sudah punya akun? <a href="/login">Masuk di sini</a>
         </div>
     </div>
+
+    <script>
+        function toggleRoleFields() {
+            const role = document.getElementById('role').value;
+            const mahasiswaFields = document.getElementById('mahasiswa-fields');
+            const dosenFields = document.getElementById('dosen-fields');
+            const mainTitle = document.getElementById('main-title');
+            const subTitle = document.getElementById('sub-title');
+            
+            // Reset required attributes
+            const mahasiswaInputs = mahasiswaFields.querySelectorAll('input');
+            const dosenInputs = dosenFields.querySelectorAll('input');
+            
+            mahasiswaInputs.forEach(input => {
+                input.removeAttribute('required');
+            });
+            dosenInputs.forEach(input => {
+                input.removeAttribute('required');
+            });
+            
+            if (role === 'mahasiswa') {
+                mahasiswaFields.style.display = 'block';
+                dosenFields.style.display = 'none';
+                mahasiswaInputs.forEach(input => {
+                    input.setAttribute('required', 'required');
+                });
+                if (mainTitle) mainTitle.textContent = 'Daftar Akun Mahasiswa';
+                if (subTitle) subTitle.textContent = 'Buat akun mahasiswa untuk mengakses sistem';
+            } else if (role === 'dosen') {
+                mahasiswaFields.style.display = 'none';
+                dosenFields.style.display = 'block';
+                dosenInputs.forEach(input => {
+                    input.setAttribute('required', 'required');
+                });
+                if (mainTitle) mainTitle.textContent = 'Daftar Akun Dosen';
+                if (subTitle) subTitle.textContent = 'Buat akun dosen untuk mengakses sistem';
+            } else {
+                mahasiswaFields.style.display = 'none';
+                dosenFields.style.display = 'none';
+                if (mainTitle) mainTitle.textContent = 'Registrasi Akun';
+                if (subTitle) subTitle.textContent = 'Buat akun untuk mengakses sistem';
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleRoleFields();
+        });
+    </script>
 
 </body>
 </html>

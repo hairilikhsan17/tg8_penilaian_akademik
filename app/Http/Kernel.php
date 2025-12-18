@@ -43,16 +43,46 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+
+        // Middleware group untuk dosen (menggunakan web + ceklogin + cekrole)
+        'dosen' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            'ceklogin',
+            'cekrole:dosen',
+        ],
+
+        // Middleware group untuk mahasiswa (menggunakan web + ceklogin + cekrole)
+        'mahasiswa' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            'ceklogin',
+            'cekrole:mahasiswa',
+        ],
     ];
 
     /**
-     * The application's middleware aliases.
+     * The application's middleware aliases (Route Middleware / $rauteModelware).
      *
      * Aliases may be used instead of class names to conveniently assign middleware to routes and groups.
+     * Penamaan: $rauteModelware (Route Middleware)
      *
      * @var array<string, class-string|string>
      */
     protected $middlewareAliases = [
+        // Middleware custom untuk cek login dan role
+        'ceklogin' => \App\Http\Middleware\CekLogin::class,
+        'cekrole' => \App\Http\Middleware\CekRole::class,
+        
+        // Middleware default Laravel
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,

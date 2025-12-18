@@ -131,15 +131,20 @@
         .bg-gray {
             background-color: #f5f5f5;
         }
+        @media screen {
+            body {
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+        }
     </style>
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <div class="no-print">
-        <button onclick="window.location.href='/mahasiswa/khs'">
-            <i class="fas fa-print"></i> Cetak PDF
+    <div class="no-print" style="padding: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 10px 20px; background-color: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px;">
+            <i class="fas fa-print"></i> Cetak / Print
         </button>
-        <button onclick="window.location.href='/mahasiswa/khs'" style="background-color: #6b7280;">
+        <button onclick="window.close()" style="padding: 10px 20px; background-color: #6b7280; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
             <i class="fas fa-times"></i> Tutup
         </button>
     </div>
@@ -147,8 +152,7 @@
     <div class="header">
         <h1>UNIVERSITAS [NAMA UNIVERSITAS]</h1>
         <h2>KARTU HASIL STUDI (KHS)</h2>
-        <p>Semester Akademik <span id="tahunAkademik"></span></p>
-        <p>Tanggal Cetak: <span id="printDate"></span></p>
+        <p>Tanggal Cetak: {{ date('d F Y, H:i:s') }}</p>
     </div>
 
     <!-- Informasi Mahasiswa -->
@@ -156,21 +160,21 @@
         <table>
             <tr>
                 <td class="label">Nama</td>
-                <td>: <span id="mahasiswaNama">-</span></td>
+                <td>: {{ $mahasiswa->nama_user ?? '-' }}</td>
                 <td class="label" style="width: 150px;">IPK</td>
-                <td>: <span class="ipk-box" id="ipkValue">0.00</span></td>
+                <td>: <span class="ipk-box">{{ number_format($ipk, 2) }}</span></td>
             </tr>
             <tr>
                 <td class="label">NIM</td>
-                <td>: <span id="mahasiswaNim">-</span></td>
+                <td>: {{ $mahasiswa->nim ?? '-' }}</td>
                 <td class="label">Total SKS</td>
-                <td>: <span id="totalSKS">0</span> SKS</td>
+                <td>: {{ $totalSKS }} SKS</td>
             </tr>
             <tr>
                 <td class="label">Program Studi</td>
-                <td>: [Program Studi]</td>
+                <td>: {{ $mahasiswa->jurusan ?? '-' }}</td>
                 <td class="label">Total Mata Kuliah</td>
-                <td>: <span id="totalMatakuliah">0</span></td>
+                <td>: {{ $nilai->count() }}</td>
             </tr>
         </table>
     </div>
@@ -189,15 +193,76 @@
                 <th style="width: 70px;">Bobot</th>
             </tr>
         </thead>
-        <tbody id="tableBody">
-            <!-- Data akan di-render oleh JavaScript -->
+        <tbody>
+            @php
+                $totalSKSRow = 0;
+                $totalBobotRow = 0;
+            @endphp
+            @forelse($nilai as $index => $item)
+            @php
+                $sks = $item->matakuliah->sks ?? 0;
+                $nilaiAkhir = $item->nilai_akhir ?? 0;
+                $hurufMutu = $item->huruf_mutu ?? '';
+                
+                // Konversi huruf mutu ke bobot
+                if ($hurufMutu) {
+                    $bobot = \App\Models\InputNilaiModel::hurufMutuToBobot($hurufMutu);
+                } else {
+                    // Jika belum ada huruf mutu, hitung dari nilai akhir
+                    $hurufMutuDariNilai = '';
+                    if ($nilaiAkhir >= 90) $hurufMutuDariNilai = 'A';
+                    elseif ($nilaiAkhir >= 85) $hurufMutuDariNilai = 'A-';
+                    elseif ($nilaiAkhir >= 80) $hurufMutuDariNilai = 'B+';
+                    elseif ($nilaiAkhir >= 75) $hurufMutuDariNilai = 'B';
+                    elseif ($nilaiAkhir >= 70) $hurufMutuDariNilai = 'B-';
+                    elseif ($nilaiAkhir >= 65) $hurufMutuDariNilai = 'C+';
+                    elseif ($nilaiAkhir >= 60) $hurufMutuDariNilai = 'C';
+                    elseif ($nilaiAkhir >= 55) $hurufMutuDariNilai = 'C-';
+                    elseif ($nilaiAkhir >= 50) $hurufMutuDariNilai = 'D';
+                    else $hurufMutuDariNilai = 'E';
+                    $bobot = \App\Models\InputNilaiModel::hurufMutuToBobot($hurufMutuDariNilai);
+                }
+                
+                $nilaiKualitas = $sks * $bobot;
+                $totalSKSRow += $sks;
+                $totalBobotRow += $nilaiKualitas;
+            @endphp
+            <tr>
+                <td>{{ $index + 1 }}</td>
+                <td class="text-left">{{ $item->matakuliah->kode_mk ?? '-' }}</td>
+                <td class="text-left">{{ $item->matakuliah->nama_mk ?? '-' }}</td>
+                <td>{{ $item->matakuliah->semester ?? '-' }}</td>
+                <td>{{ $sks }}</td>
+                <td>{{ $nilaiAkhir > 0 ? number_format($nilaiAkhir, 2) : '-' }}</td>
+                <td><strong>{{ $hurufMutu ?: '-' }}</strong></td>
+                <td>{{ $nilaiKualitas > 0 ? number_format($nilaiKualitas, 2) : '-' }}</td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 20px;">
+                    Tidak ada data nilai
+                </td>
+            </tr>
+            @endforelse
+            @if($nilai->count() > 0)
+            <tr class="bg-gray">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td><strong>TOTAL</strong></td>
+                <td><strong>{{ $totalSKSRow }}</strong></td>
+                <td><strong>--</strong></td>
+                <td><strong>--</strong></td>
+                <td><strong>{{ number_format($totalBobotRow, 2) }}</strong></td>
+            </tr>
+            @endif
         </tbody>
     </table>
 
     <!-- Keterangan -->
     <div style="margin-top: 20px; font-size: 10px;">
         <p><strong>Keterangan:</strong></p>
-        <p>Nilai Mutu: A = 4.00 (≥85), B = 3.00 (75-84), C = 2.00 (65-74), D = 1.00 (55-64), E = 0.00 (<55)</p>
+        <p>Nilai Mutu: A = 4.00 (≥90), A- = 3.75 (85-89), B+ = 3.50 (80-84), B = 3.00 (75-79), B- = 2.75 (70-74), C+ = 2.50 (65-69), C = 2.00 (60-64), C- = 1.75 (55-59), D = 1.00 (50-54), E = 0.00 (<50)</p>
         <p>IPK (Indeks Prestasi Kumulatif) = Total (SKS × Nilai Mutu) / Total SKS</p>
     </div>
 
@@ -221,10 +286,15 @@
             <p style="font-size: 9px;">Catatan: Dokumen ini dicetak secara elektronik dan berlaku tanpa tanda tangan basah</p>
         </div>
         <div class="footer-right">
-            <p style="font-size: 9px;">Dicetak pada: <span id="footerDate"></span></p>
+            <p style="font-size: 9px;">Dicetak pada: {{ date('d F Y, H:i:s') }}</p>
         </div>
     </div>
 
-    
+    <script>
+        // Optional: Auto print when page loads (uncomment if needed)
+        // window.onload = function() {
+        //     window.print();
+        // }
+    </script>
 </body>
 </html>

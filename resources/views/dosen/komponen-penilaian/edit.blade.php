@@ -42,12 +42,19 @@
                 <div class="flex items-center space-x-4">
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
+                            @php
+                                $dosenId = session('user_id');
+                                $dosen = \App\Models\DataUserModel::find($dosenId);
+                                $namaDosen = $dosen ? $dosen->nama_user : session('nama_user', 'Dosen');
+                                $nipDosen = $dosen ? ($dosen->nip ?? 'NIP-') : 'NIP-';
+                                $initial = strtoupper(substr($namaDosen, 0, 1));
+                            @endphp
                             <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                                A
+                                {{ $initial }}
                             </div>
                             <div class="hidden md:block text-left">
-                                <p class="text-sm font-semibold text-gray-700">Amirawati M.kom</p>
-                                <p class="text-xs text-gray-500">NIP-123456</p>
+                                <p class="text-sm font-semibold text-gray-700">{{ $namaDosen }}</p>
+                                <p class="text-xs text-gray-500">{{ $nipDosen }}</p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                         </button>
@@ -113,19 +120,22 @@
         </div>
 
         <div class="mx-4 my-6 bg-gray-900 bg-opacity-50 rounded-lg p-4 border border-gray-700">
+            @php
+                $totalMatakuliah = \App\Models\MatakuliahModel::where('dosen_id', $dosenId)->count();
+            @endphp
             <div class="flex items-center space-x-3 mb-3">
                 <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
-                    A
+                    {{ $initial }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-white whitespace-nowrap">Amirawati M.kom</p>
-                    <p class="text-xs text-gray-300 mt-1">NIP-123456</p>
+                    <p class="text-sm font-bold text-white whitespace-nowrap">{{ $namaDosen }}</p>
+                    <p class="text-xs text-gray-300 mt-1">{{ $nipDosen }}</p>
                 </div>
             </div>
             <div class="text-xs space-y-1">
                 <div class="flex justify-between">
                     <span class="text-gray-300">Mata Kuliah:</span>
-                    <span class="text-white font-semibold">3</span>
+                    <span class="text-white font-semibold">{{ $totalMatakuliah }}</span>
                 </div>
             </div>
         </div>
@@ -166,27 +176,27 @@
                 <div class="bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-500 rounded-lg p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-xl font-bold text-gray-800" id="matakuliahNama">Pemrograman Web</h3>
+                            <h3 class="text-xl font-bold text-gray-800" id="matakuliahNama">{{ $matakuliah->nama_mk }}</h3>
                             <p class="text-sm text-gray-600 mt-1" id="matakuliahInfo">
-                                <span class="font-semibold">Kode:</span> <span id="matakuliahKode">TIF101</span> | 
-                                <span class="font-semibold">Semester:</span> <span id="matakuliahSemester">3</span> | 
-                                <span class="font-semibold">SKS:</span> <span id="matakuliahSKS">3</span>
+                                <span class="font-semibold">Kode:</span> <span id="matakuliahKode">{{ $matakuliah->kode_mk }}</span> | 
+                                <span class="font-semibold">Semester:</span> <span id="matakuliahSemester">{{ $matakuliah->semester }}</span> | 
+                                <span class="font-semibold">SKS:</span> <span id="matakuliahSKS">{{ $matakuliah->sks }}</span>
                             </p>
                         </div>
                         <div class="hidden md:block">
                             <div class="bg-white rounded-lg p-4 shadow-sm">
                                 <p class="text-xs text-gray-500 mb-1">Total Bobot</p>
-                                <p id="total-display" class="text-2xl font-bold text-blue-600">100%</p>
+                                <p id="total-display" class="text-2xl font-bold text-green-600">{{ $komponen->total }}%</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-lg shadow-lg p-6">
-                    <form method="POST" action="/dosen/komponen-penilaian/1" class="space-y-6" id="komponen-form">
+                    <form method="POST" action="/dosen/komponen-penilaian/{{ $komponen->id }}" class="space-y-6" id="komponen-form">
                         @csrf
                         @method('PUT')
-                        <input type="hidden" name="matakuliah_id" id="matakuliahId" value="1">
+                        <input type="hidden" name="matakuliah_id" id="matakuliahId" value="{{ $matakuliah->id }}">
 
                         <!-- Info Penting -->
                         <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
@@ -213,6 +223,7 @@
                                     <input type="number" 
                                            id="kehadiran" 
                                            name="kehadiran" 
+                                           value="{{ $komponen->kehadiran }}"
                                            required
                                            min="0"
                                            max="100"
@@ -232,12 +243,26 @@
                                     <input type="number" 
                                            id="tugas" 
                                            name="tugas" 
+                                           value="{{ $komponen->tugas }}"
                                            required
                                            min="0"
                                            max="100"
                                            oninput="updateTotal()"
                                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-lg font-semibold text-center">
                                     <span class="text-gray-600 font-medium text-lg">%</span>
+                                </div>
+                                <div class="mt-3">
+                                    <label for="jumlah_tugas" class="block text-xs font-semibold text-gray-600 mb-1">
+                                        Jumlah Tugas
+                                    </label>
+                                    <input type="number" 
+                                           id="jumlah_tugas" 
+                                           name="jumlah_tugas" 
+                                           value="{{ $komponen->jumlah_tugas ?? 1 }}"
+                                           min="1"
+                                           max="20"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
+                                    <p class="mt-1 text-xs text-gray-500">Jumlah tugas yang akan diinput (1-20)</p>
                                 </div>
                                 <p class="mt-2 text-xs text-gray-500">Bobot untuk penilaian tugas mahasiswa</p>
                             </div>
@@ -251,6 +276,7 @@
                                     <input type="number" 
                                            id="kuis" 
                                            name="kuis" 
+                                           value="{{ $komponen->kuis }}"
                                            required
                                            min="0"
                                            max="100"
@@ -270,12 +296,26 @@
                                     <input type="number" 
                                            id="project" 
                                            name="project" 
+                                           value="{{ $komponen->project }}"
                                            required
                                            min="0"
                                            max="100"
                                            oninput="updateTotal()"
                                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-lg font-semibold text-center">
                                     <span class="text-gray-600 font-medium text-lg">%</span>
+                                </div>
+                                <div class="mt-3">
+                                    <label for="jumlah_project" class="block text-xs font-semibold text-gray-600 mb-1">
+                                        Jumlah Project
+                                    </label>
+                                    <input type="number" 
+                                           id="jumlah_project" 
+                                           name="jumlah_project" 
+                                           value="{{ $komponen->jumlah_project ?? 1 }}"
+                                           min="1"
+                                           max="20"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                    <p class="mt-1 text-xs text-gray-500">Jumlah project yang akan diinput (1-20)</p>
                                 </div>
                                 <p class="mt-2 text-xs text-gray-500">Bobot untuk penilaian project</p>
                             </div>
@@ -289,6 +329,7 @@
                                     <input type="number" 
                                            id="uts" 
                                            name="uts" 
+                                           value="{{ $komponen->uts }}"
                                            required
                                            min="0"
                                            max="100"
@@ -308,6 +349,7 @@
                                     <input type="number" 
                                            id="uas" 
                                            name="uas" 
+                                           value="{{ $komponen->uas }}"
                                            required
                                            min="0"
                                            max="100"
@@ -349,7 +391,96 @@
     </main>
 
     <!-- Sidebar Toggle Script -->
-    
+    <script>
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const userDropdown = document.getElementById('userDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            });
+        }
+
+        if (userDropdown) {
+            userDropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userDropdown.contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+
+        // Update total function
+        function updateTotal() {
+            const kehadiran = parseFloat(document.getElementById('kehadiran').value) || 0;
+            const tugas = parseFloat(document.getElementById('tugas').value) || 0;
+            const kuis = parseFloat(document.getElementById('kuis').value) || 0;
+            const project = parseFloat(document.getElementById('project').value) || 0;
+            const uts = parseFloat(document.getElementById('uts').value) || 0;
+            const uas = parseFloat(document.getElementById('uas').value) || 0;
+            
+            const total = kehadiran + tugas + kuis + project + uts + uas;
+            
+            // Update display
+            const totalDisplay = document.getElementById('total-display');
+            const totalDisplayMobile = document.getElementById('total-display-mobile');
+            const totalStatus = document.getElementById('total-status');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            if (totalDisplay) {
+                totalDisplay.textContent = total + '%';
+                if (total === 100) {
+                    totalDisplay.classList.remove('text-blue-600', 'text-red-600');
+                    totalDisplay.classList.add('text-green-600');
+                } else if (total > 100) {
+                    totalDisplay.classList.remove('text-blue-600', 'text-green-600');
+                    totalDisplay.classList.add('text-red-600');
+                } else {
+                    totalDisplay.classList.remove('text-green-600', 'text-red-600');
+                    totalDisplay.classList.add('text-blue-600');
+                }
+            }
+            
+            if (totalDisplayMobile) {
+                totalDisplayMobile.textContent = total + '%';
+            }
+            
+            if (totalStatus) {
+                if (total === 100) {
+                    totalStatus.innerHTML = '<span class="text-green-200"><i class="fas fa-check-circle"></i> Total sudah tepat 100%</span>';
+                } else if (total > 100) {
+                    totalStatus.innerHTML = '<span class="text-red-200"><i class="fas fa-exclamation-triangle"></i> Total melebihi 100%</span>';
+                } else {
+                    totalStatus.innerHTML = '<span class="text-yellow-200"><i class="fas fa-exclamation-triangle"></i> Kurang ' + (100 - total) + '%</span>';
+                }
+            }
+            
+            if (submitBtn) {
+                submitBtn.disabled = total !== 100;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTotal();
+        });
+    </script>
 </body>
 </html>
 

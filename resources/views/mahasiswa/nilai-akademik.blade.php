@@ -49,12 +49,19 @@
                     <!-- User Dropdown -->
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
+                            @php
+                                $mahasiswaId = session('user_id');
+                                $mahasiswaData = \App\Models\DataUserModel::find($mahasiswaId);
+                                $namaMahasiswa = $mahasiswaData ? $mahasiswaData->nama_user : session('nama_user', 'Mahasiswa');
+                                $nimMahasiswa = $mahasiswaData ? ($mahasiswaData->nim ?? '-') : '-';
+                                $initialMahasiswa = strtoupper(substr($namaMahasiswa, 0, 1));
+                            @endphp
                             <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
-                                H
+                                {{ $initialMahasiswa }}
                             </div>
                             <div class="hidden md:block text-left">
-                                <p class="text-sm font-semibold text-gray-700">Hairil Ikhsan</p>
-                                <p class="text-xs text-gray-500">221118</p>
+                                <p class="text-sm font-semibold text-gray-700">{{ $namaMahasiswa }}</p>
+                                <p class="text-xs text-gray-500">{{ $nimMahasiswa }}</p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                         </button>
@@ -119,23 +126,55 @@
 
         <!-- Info Mahasiswa Card -->
         <div class="mx-4 my-6 bg-blue-800 bg-opacity-50 rounded-lg p-4 border border-blue-700">
+            @php
+                // Hitung IPK dari nilai yang ada
+                $totalSKS = 0;
+                $totalBobot = 0;
+                foreach ($nilai as $item) {
+                    $sks = $item->matakuliah->sks ?? 0;
+                    $totalSKS += $sks;
+                    
+                    $hurufMutu = $item->huruf_mutu ?? '';
+                    if ($hurufMutu) {
+                        $bobot = \App\Models\InputNilaiModel::hurufMutuToBobot($hurufMutu);
+                    } else {
+                        $nilaiAkhir = $item->nilai_akhir ?? 0;
+                        $hurufMutuDariNilai = '';
+                        if ($nilaiAkhir >= 90) $hurufMutuDariNilai = 'A';
+                        elseif ($nilaiAkhir >= 85) $hurufMutuDariNilai = 'A-';
+                        elseif ($nilaiAkhir >= 80) $hurufMutuDariNilai = 'B+';
+                        elseif ($nilaiAkhir >= 75) $hurufMutuDariNilai = 'B';
+                        elseif ($nilaiAkhir >= 70) $hurufMutuDariNilai = 'B-';
+                        elseif ($nilaiAkhir >= 65) $hurufMutuDariNilai = 'C+';
+                        elseif ($nilaiAkhir >= 60) $hurufMutuDariNilai = 'C';
+                        elseif ($nilaiAkhir >= 55) $hurufMutuDariNilai = 'C-';
+                        elseif ($nilaiAkhir >= 50) $hurufMutuDariNilai = 'D';
+                        else $hurufMutuDariNilai = 'E';
+                        $bobot = \App\Models\InputNilaiModel::hurufMutuToBobot($hurufMutuDariNilai);
+                    }
+                    
+                    $totalBobot += $sks * $bobot;
+                }
+                $ipk = $totalSKS > 0 ? $totalBobot / $totalSKS : 0;
+                $semesterAktif = $mahasiswa->semester ?? '-';
+            @endphp
             <div class="flex items-center space-x-3 mb-3">
                 <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    H
+                    {{ $initialMahasiswa }}
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-bold text-white truncate">Hairil Ikhsan</p>
-                    <p class="text-xs text-blue-300">221118</p>
+                    <p class="text-sm font-bold text-white truncate">{{ $namaMahasiswa }}</p>
+                    <p class="text-xs text-blue-300">{{ $nimMahasiswa }}</p>
                 </div>
             </div>
             <div class="space-y-2 text-xs">
                 <div class="flex justify-between">
                     <span class="text-blue-300">Semester:</span>
-                    <span class="text-white font-semibold">3</span>
+                    <span class="text-white font-semibold">{{ $semesterAktif }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-blue-300">IPK:</span>
-                    <span class="text-white font-semibold">3.75</span>
+                    <span class="text-white font-semibold">{{ number_format($ipk, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -172,14 +211,21 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Filter Berdasarkan Semester</label>
                         <select name="semester" id="semesterSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Semua Semester</option>
+                            @foreach($semesters as $semester)
+                                <option value="{{ $semester }}" {{ request('semester') == $semester ? 'selected' : '' }}>
+                                    Semester {{ $semester }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
                     <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                         <i class="fas fa-search mr-2"></i>Filter
                     </button>
-                    <a href="/mahasiswa/nilai" id="resetBtn" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium hidden">
+                    @if(request('semester'))
+                    <a href="/mahasiswa/nilai" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium">
                         <i class="fas fa-times mr-2"></i>Reset
                     </a>
+                    @endif
                 </form>
             </div>
 
@@ -189,11 +235,17 @@
                     <h3 class="text-lg font-bold text-gray-800">
                         <i class="fas fa-list text-purple-600 mr-2"></i>Daftar Nilai Mata Kuliah
                     </h3>
-                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold" id="totalBadge">
-                        Total: <span id="totalNilai">1</span> mata kuliah
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                        Total: {{ $nilai->count() }} mata kuliah
                     </span>
                 </div>
 
+                @php
+                    // Pastikan variabel maxTugas dan maxProject terdefinisi
+                    $maxTugas = $maxTugas ?? 1;
+                    $maxProject = $maxProject ?? 1;
+                @endphp
+                @if($nilai->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -204,42 +256,233 @@
                                 <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase">SMT</th>
                                 <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase">SKS</th>
                                 <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-blue-50">Hadir</th>
-                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-green-50">Tugas</th>
+                                @if($maxTugas > 0)
+                                @for($i = 1; $i <= $maxTugas; $i++)
+                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-green-50">
+                                    <div class="flex flex-col items-center">
+                                        <span>TUGAS {{ $i }}</span>
+                                    </div>
+                                </th>
+                                @endfor
+                                @endif
                                 <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-purple-50">Quiz</th>
-                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-indigo-50">Project</th>
+                                @if($maxProject > 0)
+                                @for($i = 1; $i <= $maxProject; $i++)
+                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-indigo-50">
+                                    <div class="flex flex-col items-center">
+                                        <span>PROJECT {{ $i }}</span>
+                                    </div>
+                                </th>
+                                @endfor
+                                @endif
                                 <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-orange-50">UTS</th>
                                 <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-red-50">UAS</th>
+                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-blue-100 border-l-2 border-blue-300">Nilai Hadir</th>
+                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-green-100">Nilai Tugas</th>
+                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-indigo-100">Nilai Project</th>
+                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-red-100">Nilai Final (UAS)</th>
+                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-purple-100">Nilai Quiz</th>
+                                <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-orange-100">Nilai UTS</th>
                                 <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-yellow-50">Nilai Akhir</th>
                                 <th class="px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase bg-green-50">Huruf Mutu</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200" id="tableBody">
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($nilai as $index => $item)
+                            @php
+                                $hurufMutu = $item->huruf_mutu ?? '';
+                                $colors = $hurufMutu ? \App\Models\InputNilaiModel::getHurufMutuColors($hurufMutu) : ['bgColor' => 'bg-gray-100', 'textColor' => 'text-gray-600'];
+                            @endphp
                             <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-2 py-3 text-center text-sm text-gray-700">1</td>
+                                <td class="px-2 py-3 text-center text-sm text-gray-700">{{ $index + 1 }}</td>
                                 <td class="px-2 py-3 whitespace-nowrap">
-                                    <span class="text-sm font-semibold text-gray-900">TIF101</span>
+                                    <span class="text-sm font-semibold text-gray-900">{{ $item->matakuliah->kode_mk ?? '-' }}</span>
                                 </td>
                                 <td class="px-2 py-3">
-                                    <span class="text-sm font-medium text-gray-900">Pemrograman Web</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ $item->matakuliah->nama_mk ?? '-' }}</span>
                                 </td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700">3</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700">3</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-blue-50">90.00</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-green-50">85.00</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-purple-50">88.00</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-indigo-50">92.00</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-orange-50">87.00</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-red-50">90.00</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-center font-semibold text-gray-900 bg-yellow-50">88.50</td>
-                                <td class="px-2 py-3 text-center bg-green-50">
-                                    <span class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800">
-                                        A
+                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700">{{ $item->matakuliah->semester ?? '-' }}</td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700">{{ $item->matakuliah->sks ?? '-' }}</td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-blue-50">{{ $item->kehadiran ? number_format($item->kehadiran, 2) : '-' }}</td>
+                                @php
+                                    $tugasArray = [];
+                                    if ($item->tugas) {
+                                        if (is_string($item->tugas)) {
+                                            $decoded = json_decode($item->tugas, true);
+                                            $tugasArray = is_array($decoded) ? $decoded : [];
+                                        } elseif (is_array($item->tugas)) {
+                                            $tugasArray = $item->tugas;
+                                        } else {
+                                            $tugasArray = [(float)$item->tugas];
+                                        }
+                                    }
+                                @endphp
+                                @if($maxTugas > 0)
+                                @for($i = 0; $i < $maxTugas; $i++)
+                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-green-50">
+                                    <span>
+                                        {{ isset($tugasArray[$i]) && $tugasArray[$i] !== null && $tugasArray[$i] !== '' ? number_format((float)$tugasArray[$i], 2) : '-' }}
                                     </span>
                                 </td>
+                                @endfor
+                                @endif
+                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-purple-50">{{ $item->kuis ? number_format($item->kuis, 2) : '-' }}</td>
+                                @php
+                                    $projectArray = [];
+                                    if ($item->project) {
+                                        if (is_string($item->project)) {
+                                            $decoded = json_decode($item->project, true);
+                                            $projectArray = is_array($decoded) ? $decoded : [];
+                                        } elseif (is_array($item->project)) {
+                                            $projectArray = $item->project;
+                                        } else {
+                                            $projectArray = [(float)$item->project];
+                                        }
+                                    }
+                                @endphp
+                                @if($maxProject > 0)
+                                @for($i = 0; $i < $maxProject; $i++)
+                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-indigo-50">
+                                    <span>
+                                        {{ isset($projectArray[$i]) && $projectArray[$i] !== null && $projectArray[$i] !== '' ? number_format((float)$projectArray[$i], 2) : '-' }}
+                                    </span>
+                                </td>
+                                @endfor
+                                @endif
+                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-orange-50">{{ $item->uts ? number_format($item->uts, 2) : '-' }}</td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 bg-red-50">{{ $item->uas ? number_format($item->uas, 2) : '-' }}</td>
+                                @php
+                                    // Hitung nilai rekap berdasarkan input nilai dan bobot penilaian
+                                    // Sama persis dengan perhitungan di halaman Input Nilai dan Laporan Nilai
+                                    $komponenItem = $item->matakuliah->komponenPenilaian ?? null;
+                                    
+                                    // Calculate average for Tugas (hanya nilai yang sudah diisi)
+                                    $rataRataTugas = 0;
+                                    $tugasCount = 0;
+                                    if (!empty($tugasArray)) {
+                                        foreach ($tugasArray as $tugasVal) {
+                                            if ($tugasVal !== null && $tugasVal !== '' && is_numeric($tugasVal)) {
+                                                $rataRataTugas += (float)$tugasVal;
+                                                $tugasCount++;
+                                            }
+                                        }
+                                        if ($tugasCount > 0) {
+                                            $rataRataTugas = $rataRataTugas / $tugasCount;
+                                        } else {
+                                            $rataRataTugas = 0;
+                                        }
+                                    }
+                                    
+                                    // Calculate average for Project (hanya nilai yang sudah diisi)
+                                    $rataRataProject = 0;
+                                    $projectCount = 0;
+                                    if (!empty($projectArray)) {
+                                        foreach ($projectArray as $projectVal) {
+                                            if ($projectVal !== null && $projectVal !== '' && is_numeric($projectVal)) {
+                                                $rataRataProject += (float)$projectVal;
+                                                $projectCount++;
+                                            }
+                                        }
+                                        if ($projectCount > 0) {
+                                            $rataRataProject = $rataRataProject / $projectCount;
+                                        } else {
+                                            $rataRataProject = 0;
+                                        }
+                                    }
+                                    
+                                    // Hitung semua nilai rekap
+                                    $nilaiHadirRekap = 0;
+                                    $nilaiTugasRekap = 0;
+                                    $nilaiProjectRekap = 0;
+                                    $nilaiFinalRekap = 0;
+                                    $nilaiQuizRekap = 0;
+                                    $nilaiUtsRekap = 0;
+                                    
+                                    if ($komponenItem) {
+                                        // Nilai Hadir: (kehadiran_input / 25) * bobot_kehadiran
+                                        $kehadiranInput = $item->kehadiran ?? 0;
+                                        $bobotKehadiran = $komponenItem->kehadiran ?? 0;
+                                        if ($kehadiranInput > 0 && $bobotKehadiran > 0) {
+                                            $nilaiHadirRekap = ($kehadiranInput / 25) * $bobotKehadiran;
+                                        }
+                                        
+                                        // Nilai Tugas: (rata-rata_tugas / 100) * bobot_tugas
+                                        $bobotTugas = $komponenItem->tugas ?? 0;
+                                        if ($rataRataTugas > 0 && $bobotTugas > 0) {
+                                            $nilaiTugasRekap = ($rataRataTugas / 100) * $bobotTugas;
+                                        }
+                                        
+                                        // Nilai Quiz: (kuis_input / 100) * bobot_kuis
+                                        $kuisInput = $item->kuis ?? 0;
+                                        $bobotKuis = $komponenItem->kuis ?? 0;
+                                        if ($kuisInput > 0 && $bobotKuis > 0) {
+                                            $nilaiQuizRekap = ($kuisInput / 100) * $bobotKuis;
+                                        }
+                                        
+                                        // Nilai Project: (rata-rata_project / 100) * bobot_project
+                                        $bobotProject = $komponenItem->project ?? 0;
+                                        if ($rataRataProject > 0 && $bobotProject > 0) {
+                                            $nilaiProjectRekap = ($rataRataProject / 100) * $bobotProject;
+                                        }
+                                        
+                                        // Nilai UTS: (uts_input / 100) * bobot_uts
+                                        $utsInput = $item->uts ?? 0;
+                                        $bobotUts = $komponenItem->uts ?? 0;
+                                        if ($utsInput > 0 && $bobotUts > 0) {
+                                            $nilaiUtsRekap = ($utsInput / 100) * $bobotUts;
+                                        }
+                                        
+                                        // Nilai Final (UAS): (uas_input / 100) * bobot_uas
+                                        $uasInput = $item->uas ?? 0;
+                                        $bobotUas = $komponenItem->uas ?? 0;
+                                        if ($uasInput > 0 && $bobotUas > 0) {
+                                            $nilaiFinalRekap = ($uasInput / 100) * $bobotUas;
+                                        }
+                                    }
+                                    
+                                    // Gunakan nilai_akhir yang sudah disimpan di database (sudah dihitung dengan benar di controller)
+                                    $nilaiAkhirBaru = $item->nilai_akhir ?? 0;
+                                @endphp
+                                <td class="px-2 py-3 whitespace-nowrap text-center bg-blue-100 border-l-2 border-blue-300">
+                                    <span class="text-sm font-semibold text-gray-800">{{ $nilaiHadirRekap > 0 ? number_format($nilaiHadirRekap, 1) : '-' }}</span>
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center bg-green-100">
+                                    <span class="text-sm font-semibold text-gray-800">{{ $nilaiTugasRekap > 0 ? number_format($nilaiTugasRekap, 1) : '-' }}</span>
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center bg-indigo-100">
+                                    <span class="text-sm font-semibold text-gray-800">{{ $nilaiProjectRekap > 0 ? number_format($nilaiProjectRekap, 1) : '-' }}</span>
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center bg-red-100">
+                                    <span class="text-sm font-semibold text-gray-800">{{ $nilaiFinalRekap > 0 ? number_format($nilaiFinalRekap, 1) : '-' }}</span>
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center bg-purple-100">
+                                    <span class="text-sm font-semibold text-gray-800">{{ $nilaiQuizRekap > 0 ? number_format($nilaiQuizRekap, 1) : '-' }}</span>
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center bg-orange-100">
+                                    <span class="text-sm font-semibold text-gray-800">{{ $nilaiUtsRekap > 0 ? number_format($nilaiUtsRekap, 1) : '-' }}</span>
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-center font-semibold text-gray-900 bg-yellow-50">{{ $nilaiAkhirBaru > 0 ? number_format($nilaiAkhirBaru, 2) : '-' }}</td>
+                                <td class="px-2 py-3 text-center bg-green-50">
+                                    @if($hurufMutu)
+                                        <span class="px-2 py-1 rounded text-xs font-semibold border {{ $colors['borderColor'] }} {{ $colors['bgColor'] }} {{ $colors['textColor'] }}">
+                                            {{ $hurufMutu }}
+                                        </span>
+                                    @else
+                                        <span class="text-sm text-gray-500">-</span>
+                                    @endif
+                                </td>
                             </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
+                @else
+                <div class="text-center py-12 text-gray-500">
+                    <i class="fas fa-clipboard-list text-5xl mb-4"></i>
+                    <p class="text-lg font-medium mb-2">Belum ada data nilai</p>
+                    <p class="text-sm">Data nilai akan ditampilkan setelah dosen menginput nilai untuk mata kuliah Anda</p>
+                </div>
+                @endif
             </div>
 
             <!-- Info Card -->
@@ -251,7 +494,7 @@
                         <ul class="text-sm text-blue-700 space-y-1 list-disc list-inside">
                             <li>Nilai ditampilkan berdasarkan mata kuliah yang telah diinput oleh dosen</li>
                             <li>Gunakan filter semester untuk menyaring data berdasarkan semester tertentu</li>
-                            <li>Huruf mutu: A (≥85), B (75-84), C (65-74), D (55-64), E (<55)</li>
+                            <li>Huruf mutu: A (≥90), A- (85-89), B+ (80-84), B (75-79), B- (70-74), C+ (65-69), C (60-64), C- (55-59), D (50-54), E (<50)</li>
                             <li>Nilai akhir dihitung berdasarkan komponen penilaian yang ditetapkan dosen</li>
                         </ul>
                     </div>
@@ -262,6 +505,42 @@
     </main>
 
     <!-- Sidebar Toggle Script -->
-    
+    <script>
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            });
+        }
+
+        // User dropdown functionality
+        const userDropdown = document.getElementById('userDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        if (userDropdown) {
+            userDropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userDropdown.contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

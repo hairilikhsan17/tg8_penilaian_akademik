@@ -2,6 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\EditProfileController;
+use App\Http\Controllers\DataController;
+use App\Http\Controllers\MatakuliahController;
+use App\Http\Controllers\KomponenPenilaianController;
+use App\Http\Controllers\InputNilaiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,64 +25,79 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
-// Auth Routes
-Route::get('/login', [MenuController::class, 'login']);
-Route::post('/login', [MenuController::class, 'loginPerform']);
-Route::get('/register', [MenuController::class, 'register']);
-Route::post('/register', [MenuController::class, 'registerPerform']);
-Route::post('/logout', [MenuController::class, 'logout']);
+// Auth Routes - LoginController
+Route::get('/login', [LoginController::class, 'index']);
+Route::post('/login', [LoginController::class, 'authenticate']);
+Route::get('/logout', [LoginController::class, 'logout']);
+Route::post('/logout', [LoginController::class, 'logout']);
 
-// Dashboard Routes
+// Register Routes - RegisterController
+Route::get('/register', [RegisterController::class, 'index']);
+Route::post('/register', [RegisterController::class, 'store']);
+
+// Routes dengan Middleware Group untuk Dosen
+Route::middleware(['dosen'])->group(function () {
+// Dashboard Routes - Role based (mengarahkan ke view yang sudah dibuat)
+Route::get('/dashboard/dosen', [MenuController::class, 'dosenDashboard']);
+
+// Dashboard Routes - MenuController (untuk kompatibilitas)
 Route::get('/dosen/dashboard', [MenuController::class, 'dosenDashboard']);
-Route::get('/mahasiswa/dashboard', [MenuController::class, 'mahasiswaDashboard']);
 
 // Dosen - Profil
-Route::get('/dosen/profil', [MenuController::class, 'dosenProfil']);
-Route::put('/dosen/profil', [MenuController::class, 'dosenProfilUpdate']);
-Route::delete('/dosen/profil/foto', [MenuController::class, 'dosenProfilUpdate']);
+    Route::get('/dosen/profil', [EditProfileController::class, 'dosenProfil']);
+    Route::put('/dosen/profil', [EditProfileController::class, 'dosenProfilUpdate']);
+    Route::delete('/dosen/profil/foto', [EditProfileController::class, 'dosenProfilFotoDelete']);
 
-// Dosen - Kelola Mahasiswa
-Route::get('/dosen/mahasiswas', [MenuController::class, 'mahasiswaIndex']);
-Route::get('/dosen/mahasiswas/create', [MenuController::class, 'mahasiswaCreate']);
-Route::post('/dosen/mahasiswas', [MenuController::class, 'mahasiswaStore']);
-Route::get('/dosen/mahasiswas/{id}/edit', [MenuController::class, 'mahasiswaEdit']);
-Route::put('/dosen/mahasiswas/{id}', [MenuController::class, 'mahasiswaUpdate']);
-Route::delete('/dosen/mahasiswas/{id}', [MenuController::class, 'mahasiswaDestroy']);
-Route::get('/dosen/mahasiswas/{id}/password', [MenuController::class, 'mahasiswaPassword']);
-Route::post('/dosen/mahasiswas/{id}/password', [MenuController::class, 'mahasiswaPasswordUpdate']);
+// Dosen - Kelola Mahasiswa (DataController)
+Route::get('/dosen/mahasiswas', [DataController::class, 'index']);
+Route::get('/dosen/mahasiswas/create', [DataController::class, 'create']);
+Route::post('/dosen/mahasiswas', [DataController::class, 'store']);
+Route::get('/dosen/mahasiswas/{id}/edit', [DataController::class, 'edit']);
+Route::put('/dosen/mahasiswas/{id}', [DataController::class, 'update']);
+Route::delete('/dosen/mahasiswas/{id}', [DataController::class, 'destroy']);
+Route::get('/dosen/mahasiswas/{id}/password', [DataController::class, 'password']);
+Route::post('/dosen/mahasiswas/{id}/password', [DataController::class, 'passwordUpdate']);
 
-// Dosen - Kelola Mata Kuliah
-Route::get('/dosen/matakuliahs', [MenuController::class, 'matakuliahIndex']);
-Route::get('/dosen/matakuliahs/create', [MenuController::class, 'matakuliahCreate']);
-Route::post('/dosen/matakuliahs', [MenuController::class, 'matakuliahStore']);
-Route::get('/dosen/matakuliahs/{id}/edit', [MenuController::class, 'matakuliahEdit']);
-Route::put('/dosen/matakuliahs/{id}', [MenuController::class, 'matakuliahUpdate']);
-Route::delete('/dosen/matakuliahs/{id}', [MenuController::class, 'matakuliahDestroy']);
+// Dosen - Kelola Mata Kuliah (MatakuliahController)
+Route::get('/dosen/matakuliahs', [MatakuliahController::class, 'index']);
+Route::get('/dosen/matakuliahs/create', [MatakuliahController::class, 'create']);
+Route::post('/dosen/matakuliahs', [MatakuliahController::class, 'store']);
+Route::get('/dosen/matakuliahs/{id}/edit', [MatakuliahController::class, 'edit']);
+Route::put('/dosen/matakuliahs/{id}', [MatakuliahController::class, 'update']);
+Route::delete('/dosen/matakuliahs/{id}', [MatakuliahController::class, 'destroy']);
 
-// Dosen - Komponen Penilaian
-Route::get('/dosen/komponen-penilaian', [MenuController::class, 'komponenIndex']);
-Route::get('/dosen/komponen-penilaian/{id}/edit', [MenuController::class, 'komponenEdit']);
-Route::get('/dosen/komponen-penilaian/{id}/atur', [MenuController::class, 'komponenAtur']);
-Route::get('/dosen/matakuliahs/{id}/komponen', [MenuController::class, 'komponenCreate']);
-Route::post('/dosen/komponen-penilaian', [MenuController::class, 'komponenStore']);
-Route::put('/dosen/komponen-penilaian/{id}', [MenuController::class, 'komponenUpdate']);
+// Dosen - Komponen Penilaian (KomponenPenilaianController)
+Route::get('/dosen/komponen-penilaian', [KomponenPenilaianController::class, 'index']);
+Route::get('/dosen/matakuliahs/{id}/komponen', [KomponenPenilaianController::class, 'create']);
+Route::post('/dosen/komponen-penilaian', [KomponenPenilaianController::class, 'store']);
+Route::get('/dosen/komponen-penilaian/{id}/edit', [KomponenPenilaianController::class, 'edit']);
+Route::put('/dosen/komponen-penilaian/{id}', [KomponenPenilaianController::class, 'update']);
 
-// Dosen - Input Nilai
-Route::get('/dosen/nilai-mahasiswa', [MenuController::class, 'nilaiList']);
-Route::get('/dosen/matakuliahs/{id}/nilai', [MenuController::class, 'nilaiIndex']);
-Route::post('/dosen/matakuliahs/{id}/nilai', [MenuController::class, 'nilaiStore']);
-Route::post('/dosen/nilai-mahasiswa', [MenuController::class, 'nilaiStore']);
+// Dosen - Input Nilai (InputNilaiController)
+Route::get('/dosen/nilai-mahasiswa', [InputNilaiController::class, 'index']);
+Route::get('/dosen/matakuliahs/{id}/nilai', [InputNilaiController::class, 'create']);
+Route::post('/dosen/matakuliahs/{id}/nilai', [InputNilaiController::class, 'store']);
 
 // Dosen - Laporan
 Route::get('/dosen/laporan-nilai', [MenuController::class, 'laporanIndex']);
 Route::get('/dosen/laporan-nilai/pdf', [MenuController::class, 'laporanPdf']);
+});
+
+// Routes dengan Middleware Group untuk Mahasiswa
+Route::middleware(['mahasiswa'])->group(function () {
+    // Dashboard Routes - Role based (mengarahkan ke view yang sudah dibuat)
+    Route::get('/dashboard/mahasiswa', [MenuController::class, 'mahasiswaDashboard']);
+    
+    // Dashboard Routes - MenuController (untuk kompatibilitas)
+    Route::get('/mahasiswa/dashboard', [MenuController::class, 'mahasiswaDashboard']);
 
 // Mahasiswa - Profil
-Route::get('/mahasiswa/profil', [MenuController::class, 'mahasiswaProfil']);
-Route::put('/mahasiswa/profil', [MenuController::class, 'mahasiswaProfilUpdate']);
-Route::delete('/mahasiswa/profil/foto', [MenuController::class, 'mahasiswaProfilUpdate']);
+    Route::get('/mahasiswa/profil', [EditProfileController::class, 'mahasiswaProfil']);
+    Route::put('/mahasiswa/profil', [EditProfileController::class, 'mahasiswaProfilUpdate']);
+    Route::delete('/mahasiswa/profil/foto', [EditProfileController::class, 'mahasiswaProfilFotoDelete']);
 
 // Mahasiswa - Nilai & KHS
 Route::get('/mahasiswa/nilai', [MenuController::class, 'mahasiswaNilai']);
 Route::get('/mahasiswa/khs', [MenuController::class, 'mahasiswaKhs']);
 Route::get('/mahasiswa/cetak-khs', [MenuController::class, 'mahasiswaCetakKhs']);
+});

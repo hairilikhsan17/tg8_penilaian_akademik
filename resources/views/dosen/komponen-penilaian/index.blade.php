@@ -42,12 +42,19 @@
                 <div class="flex items-center space-x-4">
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
+                            @php
+                                $dosenId = session('user_id');
+                                $dosen = \App\Models\DataUserModel::find($dosenId);
+                                $namaDosen = $dosen ? $dosen->nama_user : session('nama_user', 'Dosen');
+                                $nipDosen = $dosen ? ($dosen->nip ?? 'NIP-') : 'NIP-';
+                                $initial = strtoupper(substr($namaDosen, 0, 1));
+                            @endphp
                             <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                                A
+                                {{ $initial }}
                             </div>
                             <div class="hidden md:block text-left">
-                                <p class="text-sm font-semibold text-gray-700">Amirawati M.kom</p>
-                                <p class="text-xs text-gray-500">NIP-123456</p>
+                                <p class="text-sm font-semibold text-gray-700">{{ $namaDosen }}</p>
+                                <p class="text-xs text-gray-500">{{ $nipDosen }}</p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                         </button>
@@ -113,19 +120,22 @@
         </div>
 
         <div class="mx-4 my-6 bg-gray-900 bg-opacity-50 rounded-lg p-4 border border-gray-700">
+            @php
+                $totalMatakuliah = \App\Models\MatakuliahModel::where('dosen_id', $dosenId)->count();
+            @endphp
             <div class="flex items-center space-x-3 mb-3">
                 <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
-                    A
+                    {{ $initial }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-white whitespace-nowrap">Amirawati M.kom</p>
-                    <p class="text-xs text-gray-300 mt-1">NIP-123456</p>
+                    <p class="text-sm font-bold text-white whitespace-nowrap">{{ $namaDosen }}</p>
+                    <p class="text-xs text-gray-300 mt-1">{{ $nipDosen }}</p>
                 </div>
             </div>
             <div class="text-xs space-y-1">
                 <div class="flex justify-between">
                     <span class="text-gray-300">Mata Kuliah:</span>
-                    <span class="text-white font-semibold">3</span>
+                    <span class="text-white font-semibold">{{ $totalMatakuliah }}</span>
                 </div>
             </div>
         </div>
@@ -159,6 +169,41 @@
                 </ol>
             </nav>
 
+            <!-- Alert Messages -->
+            @if(session('success'))
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                    <p class="text-green-700">{{ session('success') }}</p>
+                </div>
+            </div>
+            @endif
+
+            @if(session('error'))
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                    <p class="text-red-700">{{ session('error') }}</p>
+                </div>
+            </div>
+            @endif
+
+            @if($errors->any())
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-500 mr-3 mt-0.5"></i>
+                    <div>
+                        <p class="text-red-700 font-semibold mb-1">Terjadi kesalahan:</p>
+                        <ul class="list-disc list-inside text-red-600 text-sm">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <div class="space-y-6">
             <!-- Statistik Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -166,7 +211,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-blue-100 text-sm mb-1">Total Mata Kuliah</p>
-                            <p class="text-3xl font-bold">3</p>
+                            <p class="text-3xl font-bold">{{ $totalMatakuliah }}</p>
                         </div>
                         <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                             <i class="fas fa-book text-2xl"></i>
@@ -178,7 +223,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-green-100 text-sm mb-1">Sudah Ada Komponen</p>
-                            <p class="text-3xl font-bold">2</p>
+                            <p class="text-3xl font-bold">{{ $sudahAdaKomponen }}</p>
                         </div>
                         <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                             <i class="fas fa-check-circle text-2xl"></i>
@@ -190,7 +235,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-yellow-100 text-sm mb-1">Belum Ada Komponen</p>
-                            <p class="text-3xl font-bold">1</p>
+                            <p class="text-3xl font-bold">{{ $belumAdaKomponen }}</p>
                         </div>
                         <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                             <i class="fas fa-exclamation-triangle text-2xl"></i>
@@ -204,14 +249,15 @@
                 <form method="GET" action="/dosen/komponen-penilaian" class="flex flex-col md:flex-row gap-3">
                     <div class="flex-1 relative">
                         <input type="text" name="search" 
+                               value="{{ $search ?? '' }}"
                                placeholder="Cari berdasarkan Kode atau Nama Mata Kuliah..." 
                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
                     <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">Semua Status</option>
-                        <option value="sudah">Sudah Ada Komponen</option>
-                        <option value="belum">Belum Ada Komponen</option>
+                        <option value="sudah" {{ ($status ?? '') === 'sudah' ? 'selected' : '' }}>Sudah Ada Komponen</option>
+                        <option value="belum" {{ ($status ?? '') === 'belum' ? 'selected' : '' }}>Belum Ada Komponen</option>
                     </select>
                     <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                         <i class="fas fa-search mr-2"></i>Cari
@@ -236,160 +282,114 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($matakuliahs as $index => $matakuliah)
                             <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">1</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    {{ ($matakuliahs->currentPage() - 1) * $matakuliahs->perPage() + $index + 1 }}
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-semibold text-gray-900">IF301</span>
+                                    <span class="text-sm font-semibold text-gray-900">{{ $matakuliah->kode_mk }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">Basis Data Lanjut</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $matakuliah->nama_mk }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                        Semester 3
+                                        Semester {{ $matakuliah->semester }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="text-sm font-semibold text-gray-900">3 SKS</span>
+                                    <span class="text-sm font-semibold text-gray-900">{{ $matakuliah->sks }} SKS</span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <div class="flex flex-col space-y-1 text-xs">
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">Hadir:</span>
-                                            <span class="font-semibold text-blue-600">10%</span>
+                                    @if($matakuliah->komponenPenilaian)
+                                        <div class="flex flex-col space-y-1 text-xs">
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <span class="text-gray-600">Hadir:</span>
+                                                <span class="font-semibold text-blue-600">{{ $matakuliah->komponenPenilaian->kehadiran }}%</span>
+                                            </div>
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <span class="text-gray-600">Tugas:</span>
+                                                <span class="font-semibold text-green-600">{{ $matakuliah->komponenPenilaian->tugas }}%</span>
+                                            </div>
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <span class="text-gray-600">Quiz:</span>
+                                                <span class="font-semibold text-purple-600">{{ $matakuliah->komponenPenilaian->kuis }}%</span>
+                                            </div>
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <span class="text-gray-600">Project:</span>
+                                                <span class="font-semibold text-indigo-600">{{ $matakuliah->komponenPenilaian->project }}%</span>
+                                            </div>
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <span class="text-gray-600">UTS:</span>
+                                                <span class="font-semibold text-orange-600">{{ $matakuliah->komponenPenilaian->uts }}%</span>
+                                            </div>
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <span class="text-gray-600">UAS:</span>
+                                                <span class="font-semibold text-red-600">{{ $matakuliah->komponenPenilaian->uas }}%</span>
+                                            </div>
+                                            <div class="pt-1 border-t border-gray-200 mt-1">
+                                                <span class="font-bold text-gray-800">Total: {{ $matakuliah->komponenPenilaian->total }}%</span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">Tugas:</span>
-                                            <span class="font-semibold text-green-600">20%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">Quiz:</span>
-                                            <span class="font-semibold text-purple-600">10%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">Project:</span>
-                                            <span class="font-semibold text-indigo-600">20%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">UTS:</span>
-                                            <span class="font-semibold text-orange-600">20%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">UAS:</span>
-                                            <span class="font-semibold text-red-600">20%</span>
-                                        </div>
-                                        <div class="pt-1 border-t border-gray-200 mt-1">
-                                            <span class="font-bold text-gray-800">Total: 100%</span>
-                                        </div>
+                                    @else
+                                        <span class="text-gray-400 text-xs">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Belum Ada
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    @if($matakuliah->komponenPenilaian)
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i>Siap
+                                        </span>
+                                    @else
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Belum Ada
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                    @if($matakuliah->komponenPenilaian)
+                                        <a href="/dosen/komponen-penilaian/{{ $matakuliah->komponenPenilaian->id }}/edit" 
+                                           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow hover:shadow-lg text-sm">
+                                            <i class="fas fa-clipboard-check mr-2"></i>Edit
+                                        </a>
+                                    @else
+                                        <a href="/dosen/matakuliahs/{{ $matakuliah->id }}/komponen" 
+                                           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow hover:shadow-lg text-sm">
+                                            <i class="fas fa-clipboard-check mr-2"></i>Atur
+                                        </a>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-12 text-center">
+                                    <div class="text-gray-500">
+                                        <i class="fas fa-clipboard-check text-4xl mb-4"></i>
+                                        <p class="text-lg font-medium">Tidak ada data mata kuliah</p>
+                                        <p class="text-sm mt-2">
+                                            @if(request('search') || request('status'))
+                                                Tidak ditemukan mata kuliah dengan filter yang dipilih
+                                            @else
+                                                Belum ada mata kuliah terdaftar.
+                                            @endif
+                                        </p>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        <i class="fas fa-check-circle mr-1"></i>Siap
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <a href="/dosen/komponen-penilaian/1/edit" 
-                                       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow hover:shadow-lg text-sm">
-                                        <i class="fas fa-clipboard-check mr-2"></i>Edit
-                                    </a>
-                                </td>
                             </tr>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-semibold text-gray-900">IF301</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">Basis Data Lanjut</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                        Semester 3
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="text-sm font-semibold text-gray-900">3 SKS</span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="text-gray-400 text-xs">
-                                        <i class="fas fa-exclamation-triangle mr-1"></i>Belum Ada
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                        <i class="fas fa-exclamation-triangle mr-1"></i>Belum Ada
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <a href="/dosen/komponen-penilaian/2/atur" 
-                                       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow hover:shadow-lg text-sm">
-                                        <i class="fas fa-clipboard-check mr-2"></i>Atur
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">3</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-semibold text-gray-900">IF301</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">Basis Data Lanjut</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                        Semester 3
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="text-sm font-semibold text-gray-900">3 SKS</span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex flex-col space-y-1 text-xs">
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">Hadir:</span>
-                                            <span class="font-semibold text-blue-600">10%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">Tugas:</span>
-                                            <span class="font-semibold text-green-600">25%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">Quiz:</span>
-                                            <span class="font-semibold text-purple-600">15%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">Project:</span>
-                                            <span class="font-semibold text-indigo-600">20%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">UTS:</span>
-                                            <span class="font-semibold text-orange-600">30%</span>
-                                        </div>
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span class="text-gray-600">UAS:</span>
-                                            <span class="font-semibold text-red-600">15%</span>
-                                        </div>
-                                        <div class="pt-1 border-t border-gray-200 mt-1">
-                                            <span class="font-bold text-gray-800">Total: 100%</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        <i class="fas fa-check-circle mr-1"></i>Siap
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <a href="/dosen/komponen-penilaian/3/edit" 
-                                       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow hover:shadow-lg text-sm">
-                                        <i class="fas fa-clipboard-check mr-2"></i>Edit
-                                    </a>
-                                </td>
-                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Pagination -->
+                @if($matakuliahs->hasPages())
+                <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                    {{ $matakuliahs->links() }}
+                </div>
+                @endif
             </div>
 
             <!-- Info Card -->
@@ -408,6 +408,42 @@
     </main>
 
     <!-- Sidebar Toggle Script -->
-    
+    <script>
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            });
+        }
+
+        // User dropdown functionality
+        const userDropdown = document.getElementById('userDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        if (userDropdown) {
+            userDropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userDropdown.contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+    </script>
 </body>
 </html>
