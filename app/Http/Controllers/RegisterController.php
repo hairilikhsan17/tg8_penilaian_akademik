@@ -60,7 +60,17 @@ class RegisterController extends Controller
         }
 
         try {
-            // Buat user baru di MySQL database
+            $firebaseService = new FirebaseService();
+
+            // 1. Buat user di Firebase Authentication (akan muncul di Firebase Console)
+            $firebaseUser = $firebaseService->createAuthUser(
+                $request->email,
+                $request->password,
+                $request->name
+            );
+            $firebaseUid = $firebaseUser->uid;
+
+            // 2. Buat user baru di MySQL database
             $user = DataUserModel::createUser([
                 'nama_user' => $request->name,
                 'username' => $request->email,
@@ -72,9 +82,8 @@ class RegisterController extends Controller
                 'jurusan' => $request->jurusan ?? null,
             ]);
 
-            // Simpan juga ke Firebase Realtime Database (sync data)
-            $firebaseService = new FirebaseService();
-            $firebaseService->syncUser($user);
+            // 3. Simpan juga ke Firebase Realtime Database (sync data dengan Firebase UID)
+            $firebaseService->syncUser($user, $firebaseUid);
 
             // Redirect langsung ke halaman login dengan pesan sukses
             return redirect('/login')
