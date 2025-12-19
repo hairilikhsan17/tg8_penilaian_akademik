@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DataUserModel;
+use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -65,7 +66,8 @@ class DataController extends Controller
         $defaultPassword = $validated['nim']; // Default password = NIM
 
         try {
-            DataUserModel::createUser([
+            // Buat user baru di MySQL database
+            $user = DataUserModel::createUser([
                 'nama_user' => $validated['nama'],
                 'username' => $username,
                 'password' => $defaultPassword,
@@ -74,6 +76,10 @@ class DataController extends Controller
                 'semester' => $validated['semester'],
                 'jurusan' => $validated['jurusan'],
             ]);
+
+            // Simpan juga ke Firebase Realtime Database (sync data)
+            $firebaseService = new FirebaseService();
+            $firebaseService->syncUser($user);
 
             return redirect('/dosen/mahasiswas')
                 ->with('success', 'Data mahasiswa berhasil ditambahkan!');

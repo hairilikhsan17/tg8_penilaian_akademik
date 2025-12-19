@@ -60,11 +60,7 @@ class RegisterController extends Controller
         }
 
         try {
-            // Inisialisasi Firebase menggunakan FirebaseService
-            $firebaseService = new FirebaseService();
-            $usersRef = $firebaseService->getUsersReference();
-
-            // Buat user baru
+            // Buat user baru di MySQL database
             $user = DataUserModel::createUser([
                 'nama_user' => $request->name,
                 'username' => $request->email,
@@ -75,6 +71,10 @@ class RegisterController extends Controller
                 'semester' => $request->semester ?? null,
                 'jurusan' => $request->jurusan ?? null,
             ]);
+
+            // Simpan juga ke Firebase Realtime Database (sync data)
+            $firebaseService = new FirebaseService();
+            $firebaseService->syncUser($user);
 
             // Redirect langsung ke halaman login dengan pesan sukses
             return redirect('/login')

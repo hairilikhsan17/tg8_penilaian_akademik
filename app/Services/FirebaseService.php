@@ -80,6 +80,42 @@ class FirebaseService
     }
 
     /**
+     * Sync user data ke Firebase Realtime Database
+     * 
+     * @param object $user User model dari MySQL
+     * @return bool
+     */
+    public function syncUser($user): bool
+    {
+        try {
+            $usersRef = $this->getUsersReference();
+            
+            // Simpan data user ke Firebase (gunakan user ID dari MySQL sebagai key)
+            $usersRef->getChild($user->id)->set([
+                'id' => $user->id,
+                'nama_user' => $user->nama_user,
+                'username' => $user->username,
+                'email' => $user->username, // username adalah email
+                'role' => $user->role,
+                'nim' => $user->nim ?? null,
+                'nip' => $user->nip ?? null,
+                'semester' => $user->semester ?? null,
+                'jurusan' => $user->jurusan ?? null,
+                'created_at' => now()->toDateTimeString(),
+                'updated_at' => now()->toDateTimeString(),
+            ]);
+            
+            return true;
+        } catch (\Exception $e) {
+            \Log::warning('Gagal sync user ke Firebase: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'username' => $user->username ?? null
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Test koneksi Firebase (untuk debugging)
      * 
      * @return array
