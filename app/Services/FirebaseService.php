@@ -4,12 +4,10 @@ namespace App\Services;
 
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Database;
-use Kreait\Firebase\Auth;
 
 class FirebaseService
 {
     protected $database;
-    protected $auth;
     protected $databaseUrl;
 
     /**
@@ -60,50 +58,6 @@ class FirebaseService
     }
 
     /**
-     * Inisialisasi Firebase Auth
-     * 
-     * @return Auth
-     * @throws \Exception
-     */
-    public function getAuth(): Auth
-    {
-        if ($this->auth) {
-            return $this->auth;
-        }
-
-        $databaseUrl = config('services.firebase.database_url');
-        $projectId = config('services.firebase.project_id');
-        $credentialsPath = config('services.firebase.credentials_path');
-
-        // Validasi database URL
-        if (empty($databaseUrl)) {
-            throw new \Exception('FIREBASE_DATABASE_URL tidak ditemukan di environment variables');
-        }
-
-        try {
-            $factory = new Factory();
-
-            // Jika ada service account credentials file, gunakan itu
-            if (file_exists($credentialsPath) && is_readable($credentialsPath)) {
-                $factory = $factory->withServiceAccount($credentialsPath);
-            } elseif (!empty($projectId)) {
-                $factory = $factory->withProjectId($projectId);
-            }
-
-            // Set database URI
-            $factory = $factory->withDatabaseUri($databaseUrl);
-
-            // Create auth instance
-            $this->auth = $factory->createAuth();
-
-            return $this->auth;
-
-        } catch (\Exception $e) {
-            throw new \Exception('Gagal menginisialisasi Firebase Auth: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Get reference ke path tertentu di Firebase
      * 
      * @param string $path
@@ -126,90 +80,19 @@ class FirebaseService
     }
 
     /**
-     * Buat user baru di Firebase Authentication
-     * 
-     * @param string $email
-     * @param string $password
-     * @param string $displayName
-     * @return \Kreait\Firebase\Auth\UserRecord
-     * @throws \Exception
-     */
-    public function createAuthUser(string $email, string $password, string $displayName = null)
-    {
-        try {
-            $auth = $this->getAuth();
-            
-            $userProperties = [
-                'email' => $email,
-                'password' => $password,
-            ];
-            
-            if ($displayName) {
-                $userProperties['displayName'] = $displayName;
-            }
-            
-            $userRecord = $auth->createUser($userProperties);
-            
-            return $userRecord;
-        } catch (\Exception $e) {
-            throw new \Exception('Gagal membuat user di Firebase Auth: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Login user dengan Firebase Authentication
-     * 
-     * @param string $email
-     * @param string $password
-     * @return \Kreait\Firebase\Auth\SignInResult
-     * @throws \Exception
-     */
-    public function signInWithEmailAndPassword(string $email, string $password)
-    {
-        try {
-            $auth = $this->getAuth();
-            $signInResult = $auth->signInWithEmailAndPassword($email, $password);
-            return $signInResult;
-        } catch (\Exception $e) {
-            throw new \Exception('Gagal login dengan Firebase Auth: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Get user dari Firebase Auth berdasarkan UID
-     * 
-     * @param string $uid
-     * @return \Kreait\Firebase\Auth\UserRecord
-     */
-    public function getUserByUid(string $uid)
-    {
-        try {
-            $auth = $this->getAuth();
-            return $auth->getUser($uid);
-        } catch (\Exception $e) {
-            throw new \Exception('Gagal mendapatkan user dari Firebase Auth: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Sync user data ke Firebase Realtime Database
      * 
      * @param object $user User model dari MySQL
-     * @param string|null $firebaseUid Firebase UID (optional)
      * @return bool
      */
-    public function syncUser($user, ?string $firebaseUid = null): bool
+    public function syncUser($user): bool
     {
         try {
             $usersRef = $this->getUsersReference();
             
-            // Gunakan Firebase UID jika ada, atau MySQL user ID
-            $userId = $firebaseUid ?? $user->id;
-            
-            // Simpan data user ke Firebase (gunakan Firebase UID atau MySQL ID sebagai key)
-            $usersRef->getChild($userId)->set([
+            // Simpan data user ke Firebase (gunakan user ID dari MySQL sebagai key)
+            $usersRef->getChild($user->id)->set([
                 'id' => $user->id,
-                'firebase_uid' => $firebaseUid,
                 'nama_user' => $user->nama_user,
                 'username' => $user->username,
                 'email' => $user->username, // username adalah email

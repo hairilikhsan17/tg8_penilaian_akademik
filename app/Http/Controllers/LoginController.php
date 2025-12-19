@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\LoginModel;
 use App\Services\FirebaseService;
 use Illuminate\Http\Request;
-use Kreait\Firebase\Exception\AuthException;
-use Kreait\Firebase\Exception\Auth\InvalidPassword;
-use Kreait\Firebase\Exception\Auth\UserNotFound;
 
 class LoginController extends Controller
 {
@@ -24,60 +21,51 @@ class LoginController extends Controller
             'password' => 'required'
         ]);
 
-        try {
-            // 1. Authenticate dengan Firebase Authentication
-            $firebaseService = new FirebaseService();
-            $signInResult = $firebaseService->signInWithEmailAndPassword(
-                $request->username,
-                $request->password
-            );
-            
-            // Dapatkan Firebase UID dari email (karena sign in berhasil, user pasti ada)
-            $firebaseAuth = $firebaseService->getAuth();
-            $firebaseUser = $firebaseAuth->getUserByEmail($request->username);
-            $firebaseUid = $firebaseUser->uid;
+        // Inisialisasi Firebase menggunakan FirebaseService (jika diperlukan)
+        // $firebaseService = new FirebaseService();
+        // $usersRef = $firebaseService->getUsersReference();
 
-            // 2. Cari user di MySQL berdasarkan email/username untuk mendapatkan role dan data lengkap
-            $user = LoginModel::where('username', $request->username)->first();
+        // Cari user berdasarkan username untuk mendapatkan role
+        $user = LoginModel::where('username', $request->username)->first();
 
-            // Cek jika user tidak ditemukan di MySQL (harusnya ada karena sudah register)
-            if (!$user) {
-                return back()->with('error', 'User tidak ditemukan di database. Silakan hubungi administrator.');
-            }
+        // Cek jika user tidak ditemukan
+        if (!$user) {
+            return back()->with('error', 'Username atau password salah!');
+        }
 
-            // 3. Hapus session selected_role setelah digunakan (jika ada)
-            session()->forget('selected_role');
+        // Gunakan method authenticate dari model dengan role dari database
+        $result = LoginModel::authenticate(
+            $request->username,
+            $request->password,
+            $user->role
+        );
 
-            // 4. Simpan session (gunakan data dari MySQL untuk role dan info lengkap)
-            session([
-                'login'         => true,
-                'user_id'       => $user->id,
-                'firebase_uid'  => $firebaseUid,
-                'nama_user'     => $user->nama_user,
-                'username'      => $user->username,
-                'role'          => $user->role
-            ]);
+        // Cek jika autentikasi gagal
+        if (!$result['success']) {
+            return back()->with('error', $result['message']);
+        }
 
-            // 5. Arahkan ke dashboard sesuai role
-            if ($user->role == "dosen") {
-                return redirect('/dosen/dashboard');
-            } elseif ($user->role == "mahasiswa") {
-                return redirect('/mahasiswa/dashboard');
-            } elseif ($user->role == "admin") {
-                return redirect('/dashboard');
-            } elseif ($user->role == "user") {
-                return redirect('/dashboard_user');
-            }
+        // Hapus session selected_role setelah digunakan (jika ada)
+        session()->forget('selected_role');
 
-        } catch (\Kreait\Firebase\Exception\Auth\InvalidPassword $e) {
-            return back()->with('error', 'Password salah!');
-        } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
-            return back()->with('error', 'Email/Username tidak ditemukan!');
-        } catch (\Kreait\Firebase\Exception\AuthException $e) {
-            return back()->with('error', 'Email atau password salah!');
-        } catch (\Exception $e) {
-            \Log::error('Login error: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat login: ' . $e->getMessage());
+        // Simpan session
+        session([
+            'login'     => true,
+            'user_id'   => $result['user']['id'],
+            'nama_user' => $result['user']['nama_user'],
+            'username'  => $result['user']['username'],
+            'role'      => $result['user']['role']
+        ]);
+
+        // Arahkan ke dashboard sesuai role
+        if ($result['user']['role'] == "dosen") {
+            return redirect('/dosen/dashboard');
+        } elseif ($result['user']['role'] == "mahasiswa") {
+            return redirect('/mahasiswa/dashboard');
+        } elseif ($result['user']['role'] == "admin") {
+            return redirect('/dashboard');
+        } elseif ($result['user']['role'] == "user") {
+            return redirect('/dashboard_user');
         }
     }
 
