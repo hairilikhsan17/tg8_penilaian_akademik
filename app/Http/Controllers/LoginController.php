@@ -20,6 +20,13 @@ class LoginController extends Controller
             'password' => 'required'
         ]);
 
+        // Inisialisasi Firebase
+        $firebase = (new \Kreait\Firebase\Factory())
+            ->withDatabaseUri(env('FIREBASE_DATABASE_URL'))
+            ->createDatabase();
+
+        $usersRef = $firebase->getReference('users');
+
         // Cari user berdasarkan username untuk mendapatkan role
         $user = LoginModel::where('username', $request->username)->first();
 

@@ -59,6 +59,13 @@ class RegisterController extends Controller
         }
 
         try {
+            // Inisialisasi Firebase
+            $firebase = (new \Kreait\Firebase\Factory())
+                ->withDatabaseUri(env('FIREBASE_DATABASE_URL'))
+                ->createDatabase();
+
+            $usersRef = $firebase->getReference('users');
+
             // Buat user baru
             $user = DataUserModel::createUser([
                 'nama_user' => $request->name,
