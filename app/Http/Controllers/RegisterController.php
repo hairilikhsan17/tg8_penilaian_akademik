@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DataUserModel;
+use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -59,12 +60,9 @@ class RegisterController extends Controller
         }
 
         try {
-            // Inisialisasi Firebase
-            $firebase = (new \Kreait\Firebase\Factory())
-                ->withDatabaseUri(env('FIREBASE_DATABASE_URL'))
-                ->createDatabase();
-
-            $usersRef = $firebase->getReference('users');
+            // Inisialisasi Firebase menggunakan FirebaseService
+            $firebaseService = new FirebaseService();
+            $usersRef = $firebaseService->getUsersReference();
 
             // Buat user baru
             $user = DataUserModel::createUser([
@@ -86,6 +84,38 @@ class RegisterController extends Controller
             return back()
                 ->with('error', 'Terjadi kesalahan saat registrasi: ' . $e->getMessage())
                 ->withInput();
+        }
+    }
+
+    /**
+     * Test Firebase connection dan ENV variables (untuk debugging)
+     * Hapus method ini setelah testing selesai untuk keamanan
+     */
+    public function testFirebase()
+    {
+        try {
+            $firebaseService = new FirebaseService();
+            $testResult = $firebaseService->testConnection();
+            
+            // Test ENV
+            $envVars = [
+                'FIREBASE_DATABASE_URL' => env('FIREBASE_DATABASE_URL'),
+                'FIREBASE_PROJECT_ID' => env('FIREBASE_PROJECT_ID'),
+            ];
+            
+            return response()->json([
+                'firebase_test' => $testResult,
+                'env_variables' => $envVars,
+                'config_services' => config('services.firebase'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'env_variables' => [
+                    'FIREBASE_DATABASE_URL' => env('FIREBASE_DATABASE_URL'),
+                    'FIREBASE_PROJECT_ID' => env('FIREBASE_PROJECT_ID'),
+                ],
+            ], 500);
         }
     }
 }

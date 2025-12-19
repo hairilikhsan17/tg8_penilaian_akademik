@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LoginModel;
+use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 
 class LoginController extends Controller
@@ -20,12 +21,9 @@ class LoginController extends Controller
             'password' => 'required'
         ]);
 
-        // Inisialisasi Firebase
-        $firebase = (new \Kreait\Firebase\Factory())
-            ->withDatabaseUri(env('FIREBASE_DATABASE_URL'))
-            ->createDatabase();
-
-        $usersRef = $firebase->getReference('users');
+        // Inisialisasi Firebase menggunakan FirebaseService (jika diperlukan)
+        // $firebaseService = new FirebaseService();
+        // $usersRef = $firebaseService->getUsersReference();
 
         // Cari user berdasarkan username untuk mendapatkan role
         $user = LoginModel::where('username', $request->username)->first();
@@ -75,5 +73,44 @@ class LoginController extends Controller
     {
         session()->flush();
         return redirect('/login');
+    }
+
+    /**
+     * Test Firebase connection dan ENV variables (untuk debugging)
+     * Hapus method ini setelah testing selesai untuk keamanan
+     */
+    public function testFirebase()
+    {
+        try {
+            $firebaseService = new FirebaseService();
+            $testResult = $firebaseService->testConnection();
+            
+            // Test ENV - sesuai dengan instruksi user
+            $envVars = [
+                'FIREBASE_DATABASE_URL' => env('FIREBASE_DATABASE_URL'),
+            ];
+            
+            // Untuk test di localhost, gunakan dd() seperti yang diminta
+            if (config('app.debug')) {
+                dd([
+                    'env_firebase_database_url' => env('FIREBASE_DATABASE_URL'),
+                    'firebase_test' => $testResult,
+                    'config_services' => config('services.firebase'),
+                ]);
+            }
+            
+            return response()->json([
+                'firebase_test' => $testResult,
+                'env_variables' => $envVars,
+                'config_services' => config('services.firebase'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'env_variables' => [
+                    'FIREBASE_DATABASE_URL' => env('FIREBASE_DATABASE_URL'),
+                ],
+            ], 500);
+        }
     }
 }

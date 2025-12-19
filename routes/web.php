@@ -35,6 +35,9 @@ Route::post('/logout', [LoginController::class, 'logout']);
 Route::get('/register', [RegisterController::class, 'index']);
 Route::post('/register', [RegisterController::class, 'store']);
 
+// Test Firebase (Hapus route ini setelah testing selesai untuk keamanan)
+Route::get('/test-firebase', [LoginController::class, 'testFirebase']);
+
 // Routes dengan Middleware Group untuk Dosen
 Route::middleware(['dosen'])->group(function () {
 // Dashboard Routes - Role based (mengarahkan ke view yang sudah dibuat)
