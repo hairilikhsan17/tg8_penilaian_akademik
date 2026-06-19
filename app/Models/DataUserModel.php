@@ -19,7 +19,8 @@ class DataUserModel extends Model
         'nim',
         'nip',
         'semester',
-        'jurusan'
+        'jurusan',
+        'foto_profil'
     ];
 
     // Field yang disembunyikan saat serialisasi
@@ -80,22 +81,12 @@ class DataUserModel extends Model
      */
     public function updateUser($data)
     {
-        $updateData = [
-            'nama_user' => $data['nama_user'] ?? $this->nama_user,
-            'username' => $data['username'] ?? $this->username,
-            'role' => $data['role'] ?? $this->role,
-            'nim' => $data['nim'] ?? $this->nim,
-            'nip' => $data['nip'] ?? $this->nip,
-            'semester' => $data['semester'] ?? $this->semester,
-            'jurusan' => $data['jurusan'] ?? $this->jurusan,
-        ];
-
-        // Update password hanya jika diberikan
-        if (isset($data['password']) && !empty($data['password'])) {
-            $updateData['password'] = $data['password'];
+        // Hapus password dari data jika kosong agar tidak menimpa dengan string kosong/null
+        if (isset($data['password']) && empty($data['password'])) {
+            unset($data['password']);
         }
 
-        return $this->update($updateData);
+        return $this->update($data);
     }
 }
 

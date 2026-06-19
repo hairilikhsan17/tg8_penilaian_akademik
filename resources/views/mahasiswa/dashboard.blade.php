@@ -47,12 +47,16 @@
                     <!-- User Dropdown -->
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
-                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
-                                H
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                                @if($mahasiswa->foto_profil)
+                                    <img src="{{ asset($mahasiswa->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                                @else
+                                    {{ substr($mahasiswa->nama_user, 0, 1) }}
+                                @endif
                             </div>
                             <div class="hidden md:block text-left">
-                                <p class="text-sm font-semibold text-gray-700">Hairil Ikhsan</p>
-                                <p class="text-xs text-gray-500">NIM-221118</p>
+                                <p class="text-sm font-semibold text-gray-700">{{ $mahasiswa->nama_user }}</p>
+                                <p class="text-xs text-gray-500">NIM-{{ $mahasiswa->nim }}</p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                         </button>
@@ -119,22 +123,26 @@
         <!-- Info Mahasiswa Card -->
         <div class="mx-4 my-6 bg-blue-800 bg-opacity-50 rounded-lg p-4 border border-blue-700">
             <div class="flex items-center space-x-3 mb-3">
-                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    H
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                    @if($mahasiswa->foto_profil)
+                        <img src="{{ asset($mahasiswa->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                    @else
+                        {{ substr($mahasiswa->nama_user, 0, 1) }}
+                    @endif
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-bold text-white truncate">Hairil Ikhsan</p>
-                    <p class="text-xs text-blue-300">NIM-221118</p>
+                    <p class="text-sm font-bold text-white truncate">{{ $mahasiswa->nama_user }}</p>
+                    <p class="text-xs text-blue-300">NIM-{{ $mahasiswa->nim }}</p>
                 </div>
             </div>
             <div class="space-y-2 text-xs">
                 <div class="flex justify-between">
                     <span class="text-blue-300">Semester:</span>
-                    <span class="text-white font-semibold">3</span>
+                    <span class="text-white font-semibold">{{ $mahasiswa->semester }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-blue-300">IPK:</span>
-                    <span class="text-white font-semibold">3.50</span>
+                    <span class="text-white font-semibold">{{ $ipk }}</span>
                 </div>
             </div>
         </div>
@@ -169,8 +177,8 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-blue-100 text-sm font-medium mb-1">Mata Kuliah Aktif</p>
-                                <p class="text-3xl font-bold">5</p>
-                                <p class="text-xs text-blue-200 mt-1">Semester 3</p>
+                                <p class="text-3xl font-bold">{{ $activeCourses }}</p>
+                                <p class="text-xs text-blue-200 mt-1">Semester {{ $mahasiswa->semester }}</p>
                             </div>
                             <div class="bg-white bg-opacity-20 rounded-full p-4">
                                 <i class="fas fa-book text-2xl"></i>
@@ -183,8 +191,8 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-green-100 text-sm font-medium mb-1">Rata-rata Semester</p>
-                                <p class="text-3xl font-bold">85.50</p>
-                                <p class="text-xs text-green-200 mt-1">Semester 3</p>
+                                <p class="text-3xl font-bold">{{ $averageGrade }}</p>
+                                <p class="text-xs text-green-200 mt-1">Semester {{ $mahasiswa->semester }}</p>
                             </div>
                             <div class="bg-white bg-opacity-20 rounded-full p-4">
                                 <i class="fas fa-chart-line text-2xl"></i>
@@ -197,7 +205,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-purple-100 text-sm font-medium mb-1">IPK</p>
-                                <p class="text-3xl font-bold">3.75</p>
+                                <p class="text-3xl font-bold">{{ $ipk }}</p>
                                 <p class="text-xs text-purple-200 mt-1">Indeks Prestasi Kumulatif</p>
                             </div>
                             <div class="bg-white bg-opacity-20 rounded-full p-4">
@@ -257,25 +265,25 @@
                         <div class="space-y-3">
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600 font-medium">NIM</span>
-                                <span class="text-gray-800 font-semibold">221118</span>
+                                <span class="text-gray-800 font-semibold">{{ $mahasiswa->nim }}</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600 font-medium">Nama</span>
-                                <span class="text-gray-800 font-semibold">Hairil Ikhsan</span>
+                                <span class="text-gray-800 font-semibold">{{ $mahasiswa->nama_user }}</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600 font-medium">Semester Aktif</span>
-                                <span class="text-gray-800 font-semibold">Semester 3</span>
+                                <span class="text-gray-800 font-semibold">Semester {{ $mahasiswa->semester }}</span>
                             </div>
                         </div>
                         <div class="space-y-3">
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600 font-medium">Jurusan</span>
-                                <span class="text-gray-800 font-semibold">Teknik Informatika</span>
+                                <span class="text-gray-800 font-semibold">{{ $mahasiswa->jurusan }}</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600 font-medium">Email</span>
-                                <span class="text-gray-800 font-semibold">hairil.ikhsan@email.com</span>
+                                <span class="text-gray-800 font-semibold">{{ $mahasiswa->username }}</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600 font-medium">Status</span>
@@ -289,6 +297,48 @@
     </main>
 
     <!-- Sidebar Toggle Script -->
-    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const userDropdown = document.getElementById('userDropdown');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            // Mobile Sidebar Toggle
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarOverlay.classList.toggle('hidden');
+                });
+            }
+
+            // Overlay Click (Close Sidebar)
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebarOverlay.classList.add('hidden');
+                });
+            }
+
+            // User Dropdown Toggle
+            if (userDropdown) {
+                const btn = userDropdown.querySelector('button');
+                if (btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        dropdownMenu.classList.toggle('hidden');
+                    });
+                }
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userDropdown.contains(e.target)) {
+                        dropdownMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -76,8 +76,12 @@
                 <div class="flex items-center space-x-4">
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
-                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                                {{ strtoupper(substr($nama ?? $user->nama_user ?? 'D', 0, 1)) }}
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                                @if($user->foto_profil)
+                                    <img src="{{ asset($user->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                                @else
+                                    {{ strtoupper(substr($nama ?? $user->nama_user ?? 'D', 0, 1)) }}
+                                @endif
                             </div>
                             <div class="hidden md:block text-left">
                                 <p class="text-sm font-semibold text-gray-700">{{ $nama ?? $user->nama_user ?? 'Dosen' }}</p>
@@ -148,8 +152,12 @@
 
         <div class="mx-4 my-6 bg-gray-900 bg-opacity-50 rounded-lg p-4 border border-gray-700">
             <div class="flex items-center space-x-3 mb-3">
-                <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
-                    {{ strtoupper(substr($nama ?? $user->nama_user ?? 'D', 0, 1)) }}
+                <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl overflow-hidden" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
+                    @if($user->foto_profil)
+                        <img src="{{ asset($user->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($nama ?? $user->nama_user ?? 'D', 0, 1)) }}
+                    @endif
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-bold text-white whitespace-nowrap">{{ $nama ?? $user->nama_user ?? 'Dosen' }}</p>
@@ -219,23 +227,43 @@
                         <!-- Profile Avatar -->
                         <div class="flex items-center space-x-6 pb-6 border-b border-gray-200 mb-6">
                             <div class="relative group">
-                                <label for="upload-foto-empty-view" class="cursor-pointer">
-                                    <div class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-blue-500 relative group">
-                                        A
-                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-all duration-200">
-                                            <i class="fas fa-camera text-white text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                @if($user->foto_profil)
+                                    <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-blue-500 relative group">
+                                        <img src="{{ asset($user->foto_profil) }}" alt="Foto Profil" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-all duration-200">
+                                            <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <label for="upload-foto-empty-view" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-colors" title="Ganti Foto">
+                                                    <i class="fas fa-camera text-sm"></i>
+                                                </label>
+                                                <form action="/dosen/profil/foto" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-colors" title="Hapus Foto">
+                                                        <i class="fas fa-trash text-sm"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
-                                </label>
+                                @else
+                                    <label for="upload-foto-empty-view" class="cursor-pointer">
+                                        <div class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-blue-500 relative group">
+                                            {{ strtoupper(substr($nama ?? $user->nama_user, 0, 1)) }}
+                                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-all duration-200">
+                                                <i class="fas fa-camera text-white text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </div>
+                                    </label>
+                                @endif
                                 
                                 <!-- Form untuk upload foto (hidden) -->
                                 <form id="upload-form-empty-view" method="POST" action="/dosen/profil" enctype="multipart/form-data" class="hidden">
                                     @csrf
                                     @method('PUT')
-                                    <input type="hidden" name="nama" value="Amirawati">
-                                    <input type="hidden" name="nip" value="NIP-1234567">
-                                    <input type="hidden" name="email" value="mira@gmail.com">
-                                    <input type="hidden" name="user_email" value="mira@gmail.com">
+                                    <input type="hidden" name="nama" value="{{ $nama ?? $user->nama_user }}">
+                                    <input type="hidden" name="nip" value="{{ $nip ?? $user->nip }}">
+                                    <input type="hidden" name="email" value="{{ $email ?? $user->username }}">
+                                    <input type="hidden" name="user_email" value="{{ $user_email ?? $user->username }}">
                                     <input type="file" id="upload-foto-empty-view" name="foto_profil" accept="image/*" onchange="this.form.submit()">
                                 </form>
                             </div>
@@ -480,6 +508,48 @@
     </main>
 
     <!-- Sidebar Toggle Script -->
-    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const userDropdown = document.getElementById('userDropdown');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            // Mobile Sidebar Toggle
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarOverlay.classList.toggle('hidden');
+                });
+            }
+
+            // Overlay Click (Close Sidebar)
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebarOverlay.classList.add('hidden');
+                });
+            }
+
+            // User Dropdown Toggle
+            if (userDropdown) {
+                const btn = userDropdown.querySelector('button');
+                if (btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        dropdownMenu.classList.toggle('hidden');
+                    });
+                }
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userDropdown.contains(e.target)) {
+                        dropdownMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

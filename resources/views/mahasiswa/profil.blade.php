@@ -110,8 +110,12 @@
                     <!-- User Dropdown -->
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
-                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
-                                {{ strtoupper(substr($nama ?? $user->nama_user ?? 'M', 0, 1)) }}
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                                @if($user->foto_profil)
+                                    <img src="{{ asset($user->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                                @else
+                                    {{ strtoupper(substr($nama ?? $user->nama_user ?? 'M', 0, 1)) }}
+                                @endif
                             </div>
                             <div class="hidden md:block text-left">
                                 <p class="text-sm font-semibold text-gray-700">{{ $nama ?? $user->nama_user ?? 'Mahasiswa' }}</p>
@@ -181,8 +185,12 @@
         <!-- Info Mahasiswa Card -->
         <div class="mx-4 my-6 bg-blue-800 bg-opacity-50 rounded-lg p-4 border border-blue-700">
             <div class="flex items-center space-x-3 mb-3">
-                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {{ strtoupper(substr($nama ?? $user->nama_user ?? 'M', 0, 1)) }}
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                    @if($user->foto_profil)
+                        <img src="{{ asset($user->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($nama ?? $user->nama_user ?? 'M', 0, 1)) }}
+                    @endif
                 </div>
                 <div class="flex-1">
                     <p class="text-sm font-bold text-white truncate">{{ $nama ?? $user->nama_user ?? 'Mahasiswa' }}</p>
@@ -280,8 +288,8 @@
                             <!-- Profile Avatar -->
                             <div class="md:col-span-2 flex items-center space-x-6 pb-6 border-b border-gray-200">
                                 <div class="relative group">
-                                    <div id="avatarWithFoto" style="display: none;">
-                                        <img src="" 
+                                    <div id="avatarWithFoto" style="{{ $user->foto_profil ? 'display: block;' : 'display: none;' }}">
+                                        <img src="{{ $user->foto_profil ? asset($user->foto_profil) : '' }}" 
                                              alt="Foto Profil" 
                                              class="w-24 h-24 rounded-full object-cover border-4 border-blue-500">
                                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer">
@@ -299,7 +307,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <label for="upload-foto-empty-view" class="cursor-pointer" id="avatarEmpty">
+                                    <label for="upload-foto-empty-view" class="cursor-pointer" id="avatarEmpty" style="{{ $user->foto_profil ? 'display: none;' : 'display: flex;' }}">
                                         <div class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-blue-500 relative group">
                                             <span id="avatarInitial">{{ strtoupper(substr($nama ?? $user->nama_user, 0, 1)) }}</span>
                                             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-all duration-200">
@@ -312,23 +320,23 @@
                                     <form id="upload-form-view" action="/mahasiswa/profil" method="POST" enctype="multipart/form-data" style="display: none;">
                                         @csrf
                                         @method('PUT')
-                                        <input type="hidden" name="nama" value="">
-                                        <input type="hidden" name="nim" value="">
-                                        <input type="hidden" name="email" value="">
-                                        <input type="hidden" name="user_email" value="">
-                                        <input type="hidden" name="semester" value="">
-                                        <input type="hidden" name="jurusan" value="">
+                                        <input type="hidden" name="nama" value="{{ $nama ?? $user->nama_user }}">
+                                        <input type="hidden" name="nim" value="{{ $nim ?? $user->nim }}">
+                                        <input type="hidden" name="email" value="{{ $email ?? $user->username }}">
+                                        <input type="hidden" name="user_email" value="{{ $user_email ?? $user->username }}">
+                                        <input type="hidden" name="semester" value="{{ $semester ?? $user->semester }}">
+                                        <input type="hidden" name="jurusan" value="{{ $jurusan ?? $user->jurusan }}">
                                         <input type="file" id="upload-foto-view" name="foto_profil" accept="image/*" onchange="this.form.submit()">
                                     </form>
                                     <form id="upload-form-empty-view" action="/mahasiswa/profil" method="POST" enctype="multipart/form-data" style="display: none;">
                                         @csrf
                                         @method('PUT')
-                                        <input type="hidden" name="nama" value="">
-                                        <input type="hidden" name="nim" value="">
-                                        <input type="hidden" name="email" value="">
-                                        <input type="hidden" name="user_email" value="">
-                                        <input type="hidden" name="semester" value="">
-                                        <input type="hidden" name="jurusan" value="">
+                                        <input type="hidden" name="nama" value="{{ $nama ?? $user->nama_user }}">
+                                        <input type="hidden" name="nim" value="{{ $nim ?? $user->nim }}">
+                                        <input type="hidden" name="email" value="{{ $email ?? $user->username }}">
+                                        <input type="hidden" name="user_email" value="{{ $user_email ?? $user->username }}">
+                                        <input type="hidden" name="semester" value="{{ $semester ?? $user->semester }}">
+                                        <input type="hidden" name="jurusan" value="{{ $jurusan ?? $user->jurusan }}">
                                         <input type="file" id="upload-foto-empty-view" name="foto_profil" accept="image/*" onchange="this.form.submit()">
                                     </form>
                                 </div>

@@ -29,8 +29,12 @@
             <div class="flex items-center space-x-4">
                 <div class="relative" id="userDropdown">
                     <button class="flex items-center space-x-3 focus:outline-none">
-                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                            {{ $initial }}
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                            @if($dosen && !empty($dosen->foto_profil))
+                                <img src="{{ asset($dosen->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                            @else
+                                {{ $initial }}
+                            @endif
                         </div>
                         <div class="hidden md:block text-left">
                             <p class="text-sm font-semibold text-gray-700">{{ $namaDosen }}</p>

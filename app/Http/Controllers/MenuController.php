@@ -99,7 +99,68 @@ class MenuController extends Controller
     // Dashboard Mahasiswa
     public function mahasiswaDashboard()
     {
-        return view('mahasiswa.dashboard');
+        $mahasiswaId = session('user_id');
+        $mahasiswa = \App\Models\DataUserModel::find($mahasiswaId);
+
+        if (!$mahasiswa || $mahasiswa->role !== 'mahasiswa') {
+            return redirect('/login')->with('error', 'Silakan login kembali.');
+        }
+
+        // Hitung Statistik
+        // 1. Mata Kuliah Aktif (Semester ini)
+        $activeCourses = 0;
+        $currentSemester = $mahasiswa->semester;
+        
+        // Asumsi: Mata kuliah aktif adalah mata kuliah yang diambil di semester saat ini
+        // Kita bisa ambil dari InputNilaiModel yang memiliki matakuliah di semester ini
+        $activeCourses = \App\Models\InputNilaiModel::where('mahasiswa_id', $mahasiswaId)
+            ->whereHas('matakuliah', function($q) use ($currentSemester) {
+                $q->where('semester', $currentSemester);
+            })
+            ->count();
+
+        // 2. Rata-rata Semester Berjalan
+        $averageGrade = 0;
+        $nilaiSemester = \App\Models\InputNilaiModel::where('mahasiswa_id', $mahasiswaId)
+            ->whereHas('matakuliah', function($q) use ($currentSemester) {
+                $q->where('semester', $currentSemester);
+            })
+            ->avg('nilai_akhir');
+            
+        $averageGrade = $nilaiSemester ? number_format($nilaiSemester, 2) : 0;
+
+        // 3. IPK
+        $allNilai = \App\Models\InputNilaiModel::with('matakuliah')
+            ->where('mahasiswa_id', $mahasiswaId)
+            ->get();
+            
+        $totalSKS = 0;
+        $totalBobot = 0;
+        
+        foreach ($allNilai as $item) {
+            $sks = $item->matakuliah->sks ?? 0;
+            $totalSKS += $sks;
+            
+            // Konversi huruf mutu ke bobot
+            $hurufMutu = $item->huruf_mutu ?? '';
+            $bobot = \App\Models\InputNilaiModel::hurufMutuToBobot($hurufMutu);
+            
+            // Jika belum ada huruf mutu, hitung manual (fallback)
+            if ($bobot == 0 && $item->nilai_akhir) {
+                $nilaiAkhir = $item->nilai_akhir;
+                if ($nilaiAkhir >= 85) $bobot = 4;
+                elseif ($nilaiAkhir >= 75) $bobot = 3;
+                elseif ($nilaiAkhir >= 65) $bobot = 2;
+                elseif ($nilaiAkhir >= 55) $bobot = 1;
+                else $bobot = 0;
+            }
+            
+            $totalBobot += $sks * $bobot;
+        }
+        
+        $ipk = $totalSKS > 0 ? number_format($totalBobot / $totalSKS, 2) : 0;
+
+        return view('mahasiswa.dashboard', compact('mahasiswa', 'activeCourses', 'averageGrade', 'ipk'));
     }
 
     public function mahasiswaProfil()

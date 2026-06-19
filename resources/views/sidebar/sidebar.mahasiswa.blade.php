@@ -48,12 +48,16 @@
                     <!-- User Dropdown -->
                     <div class="relative" id="userDropdown">
                         <button class="flex items-center space-x-3 focus:outline-none">
-                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
-                                H
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                                @if(isset($mahasiswa) && !empty($mahasiswa->foto_profil))
+                                    <img src="{{ asset($mahasiswa->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                                @else
+                                    {{ isset($mahasiswa) ? substr($mahasiswa->nama_user, 0, 1) : 'M' }}
+                                @endif
                             </div>
                             <div class="hidden md:block text-left">
-                                <p class="text-sm font-semibold text-gray-700">Hairil Ikhsan</p>
-                                <p class="text-xs text-gray-500">NIM-221118</p>
+                                <p class="text-sm font-semibold text-gray-700">{{ isset($mahasiswa) ? $mahasiswa->nama_user : 'Mahasiswa' }}</p>
+                                <p class="text-xs text-gray-500">{{ isset($mahasiswa) ? 'NIM-' . $mahasiswa->nim : '' }}</p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                         </button>
@@ -114,12 +118,16 @@
         <!-- Info Mahasiswa Card -->
         <div class="mx-4 my-6 bg-blue-800 bg-opacity-50 rounded-lg p-4 border border-blue-700">
             <div class="flex items-center space-x-3 mb-3">
-                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    H
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                    @if(isset($mahasiswa) && !empty($mahasiswa->foto_profil))
+                        <img src="{{ asset($mahasiswa->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                    @else
+                        {{ isset($mahasiswa) ? substr($mahasiswa->nama_user, 0, 1) : 'M' }}
+                    @endif
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-bold text-white truncate">Hairil Ikhsan</p>
-                    <p class="text-xs text-blue-300">NIM-221118</p>
+                    <p class="text-sm font-bold text-white truncate">{{ isset($mahasiswa) ? $mahasiswa->nama_user : 'Mahasiswa' }}</p>
+                    <p class="text-xs text-blue-300">{{ isset($mahasiswa) ? 'NIM-' . $mahasiswa->nim : '' }}</p>
                 </div>
             </div>
             <div class="space-y-2 text-xs">

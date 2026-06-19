@@ -56,8 +56,12 @@
                                 $nimMahasiswa = $mahasiswaData ? ($mahasiswaData->nim ?? '-') : '-';
                                 $initialMahasiswa = strtoupper(substr($namaMahasiswa, 0, 1));
                             @endphp
-                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
-                                {{ $initialMahasiswa }}
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                                @if($mahasiswaData && !empty($mahasiswaData->foto_profil))
+                                    <img src="{{ asset($mahasiswaData->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                                @else
+                                    {{ $initialMahasiswa }}
+                                @endif
                             </div>
                             <div class="hidden md:block text-left">
                                 <p class="text-sm font-semibold text-gray-700">{{ $namaMahasiswa }}</p>
@@ -130,8 +134,12 @@
                 $semesterAktif = $mahasiswa->semester ?? '-';
             @endphp
             <div class="flex items-center space-x-3 mb-3">
-                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {{ $initialMahasiswa }}
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                    @if($mahasiswaData && !empty($mahasiswaData->foto_profil))
+                        <img src="{{ asset($mahasiswaData->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                    @else
+                        {{ $initialMahasiswa }}
+                    @endif
                 </div>
                 <div class="flex-1">
                     <p class="text-sm font-bold text-white truncate">{{ $namaMahasiswa }}</p>

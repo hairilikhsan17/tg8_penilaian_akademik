@@ -118,6 +118,19 @@ class EditProfileController extends Controller
                 $updateData['password'] = $request->password;
             }
 
+            // Handle upload foto profil jika ada
+            if ($request->hasFile('foto_profil')) {
+                $file = $request->file('foto_profil');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/profil'), $filename);
+                $updateData['foto_profil'] = 'uploads/profil/' . $filename;
+                
+                // Hapus foto lama jika ada
+                if ($user->foto_profil && file_exists(public_path($user->foto_profil))) {
+                    unlink(public_path($user->foto_profil));
+                }
+            }
+
             $user->updateUser($updateData);
 
             // Update session
@@ -125,13 +138,6 @@ class EditProfileController extends Controller
                 'nama_user' => $request->nama,
                 'username' => $request->user_email,
             ]);
-
-            // Handle upload foto profil jika ada
-            if ($request->hasFile('foto_profil')) {
-                // Simpan foto profil (implementasi sesuai kebutuhan)
-                // $fotoPath = $request->file('foto_profil')->store('foto_profil', 'public');
-                // Simpan path ke database jika diperlukan
-            }
 
             return redirect('/dosen/profil')
                 ->with('success', 'Profil berhasil diperbarui!');
@@ -158,8 +164,18 @@ class EditProfileController extends Controller
             return redirect('/mahasiswa/dashboard')->with('error', 'Akses ditolak!');
         }
 
-        // Implementasi hapus foto profil
-        // Hapus file foto dari storage jika ada
+        $userId = session('user_id');
+        $user = DataUserModel::find($userId);
+
+        if ($user) {
+            // Hapus file foto dari storage jika ada
+            if ($user->foto_profil && file_exists(public_path($user->foto_profil))) {
+                unlink(public_path($user->foto_profil));
+            }
+
+            // Update database
+            $user->updateUser(['foto_profil' => null]);
+        }
 
         return redirect('/dosen/profil')
             ->with('success', 'Foto profil berhasil dihapus!');
@@ -283,6 +299,19 @@ class EditProfileController extends Controller
                 $updateData['password'] = $request->password;
             }
 
+            // Handle upload foto profil jika ada
+            if ($request->hasFile('foto_profil')) {
+                $file = $request->file('foto_profil');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/profil'), $filename);
+                $updateData['foto_profil'] = 'uploads/profil/' . $filename;
+                
+                // Hapus foto lama jika ada
+                if ($user->foto_profil && file_exists(public_path($user->foto_profil))) {
+                    unlink(public_path($user->foto_profil));
+                }
+            }
+
             $user->updateUser($updateData);
 
             // Update session
@@ -290,13 +319,6 @@ class EditProfileController extends Controller
                 'nama_user' => $request->nama,
                 'username' => $request->user_email,
             ]);
-
-            // Handle upload foto profil jika ada
-            if ($request->hasFile('foto_profil')) {
-                // Simpan foto profil (implementasi sesuai kebutuhan)
-                // $fotoPath = $request->file('foto_profil')->store('foto_profil', 'public');
-                // Simpan path ke database jika diperlukan
-            }
 
             return redirect('/mahasiswa/profil')
                 ->with('success', 'Profil berhasil diperbarui!');
@@ -323,8 +345,18 @@ class EditProfileController extends Controller
             return redirect('/dosen/dashboard')->with('error', 'Akses ditolak!');
         }
 
-        // Implementasi hapus foto profil
-        // Hapus file foto dari storage jika ada
+        $userId = session('user_id');
+        $user = DataUserModel::find($userId);
+
+        if ($user) {
+            // Hapus file foto dari storage jika ada
+            if ($user->foto_profil && file_exists(public_path($user->foto_profil))) {
+                unlink(public_path($user->foto_profil));
+            }
+
+            // Update database
+            $user->updateUser(['foto_profil' => null]);
+        }
 
         return redirect('/mahasiswa/profil')
             ->with('success', 'Foto profil berhasil dihapus!');

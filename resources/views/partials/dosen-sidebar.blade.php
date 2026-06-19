@@ -49,8 +49,12 @@
 
     <div class="mx-4 my-6 bg-gray-900 bg-opacity-50 rounded-lg p-4 border border-gray-700">
         <div class="flex items-center space-x-3 mb-3">
-            <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
-                {{ $initial }}
+            <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-xl overflow-hidden" style="aspect-ratio: 1/1; min-width: 4rem; min-height: 4rem;">
+                @if($dosen && !empty($dosen->foto_profil))
+                    <img src="{{ asset($dosen->foto_profil) }}" alt="Foto" class="w-full h-full object-cover">
+                @else
+                    {{ $initial }}
+                @endif
             </div>
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-bold text-white whitespace-nowrap">{{ $namaDosen }}</p>
